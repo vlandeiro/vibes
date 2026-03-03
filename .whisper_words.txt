@@ -1,0 +1,4 @@
+Ollama
+LLM
+Whisper
+sox
