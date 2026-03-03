@@ -14,9 +14,9 @@
     <key>KeepAlive</key>
     <true/>
     <key>StandardOutPath</key>
-    <string>/Users/virgile/.local/var/log/ollama.log</string>
+    <string>__HOME__/.local/var/log/ollama.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/virgile/.local/var/log/ollama.log</string>
+    <string>__HOME__/.local/var/log/ollama.log</string>
     <key>EnvironmentVariables</key>
     <dict>
       <key>OLLAMA_HOST</key>

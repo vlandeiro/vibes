@@ -73,25 +73,25 @@ make load
 
 ## Usage
 
-| Hotkey | Action |
-|---|---|
-| `Cmd+Alt+R` | Start recording / Stop and type output at cursor |
+| Hotkey            | Action                                              |
+|-------------------|-----------------------------------------------------|
+| `Cmd+Alt+R`       | Start recording / Stop and type output at cursor    |
 | `Cmd+Alt+Shift+R` | Start recording / Stop and copy output to clipboard |
-| `Shift+Escape` | Cancel recording |
+| `Shift+Escape`    | Cancel recording                                    |
 
 Select the output mode from the menu bar icon before or between recordings.
 
 ## Output Modes
 
-| Mode | Description |
-|---|---|
-| Raw | Unfiltered Whisper transcript, no LLM processing |
-| Polished Casual | Removes filler words, fixes punctuation, preserves natural tone |
-| Tech & Markdown | Formats output as Markdown, wraps code and filenames in backticks |
-| Cross-Translator | Translates between English and French |
-| Structured Notes | Converts speech into a clean bullet-point list |
-| Professional Email | Formats dictation as a structured professional email |
-| Quick Message | Formats dictation as a casual Slack or text message |
+| Mode               | Description                                                       |
+|--------------------|-------------------------------------------------------------------|
+| Raw                | Unfiltered Whisper transcript, no LLM processing                  |
+| Polished Casual    | Removes filler words, fixes punctuation, preserves natural tone   |
+| Tech & Markdown    | Formats output as Markdown, wraps code and filenames in backticks |
+| Cross-Translator   | Translates between English and French                             |
+| Structured Notes   | Converts speech into a clean bullet-point list                    |
+| Professional Email | Formats dictation as a structured professional email              |
+| Quick Message      | Formats dictation as a casual Slack or text message               |
 
 ## Custom Vocabulary
 

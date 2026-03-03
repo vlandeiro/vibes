@@ -12,7 +12,8 @@ install: dirs link-whisper install-launchd install-words
 	@echo "Installation complete."
 	@echo "  - whisper.lua is symlinked from the repo."
 	@echo "  - Add 'require(\"whisper\")' to ~/.hammerspoon/init.lua if not already present."
-	@echo "  - Run 'make load' to start the Whisper and Ollama servers."
+	@echo "  - Launchd agents are installed and will start automatically on next login."
+	@echo "  - Run 'make load' to start them immediately without logging out."
 
 dirs:
 	@mkdir -p $(LOCAL_BIN) $(LOCAL_LOG)
@@ -25,10 +26,10 @@ link-whisper:
 	@echo "Linked whisper-server-start.sh -> $(LOCAL_BIN)/whisper-server-start.sh"
 
 install-launchd:
-	@sed "s|/Users/virgile|$(HOME)|g" $(REPO)/launchd/com.ollama.server.plist \
+	@sed "s|__HOME__|$(HOME)|g" $(REPO)/launchd/com.ollama.server.plist \
 		> $(LAUNCH_AGENTS)/com.ollama.server.plist
 	@echo "Installed com.ollama.server.plist"
-	@sed "s|/Users/virgile|$(HOME)|g" $(REPO)/launchd/com.whisper.server.plist \
+	@sed "s|__HOME__|$(HOME)|g" $(REPO)/launchd/com.whisper.server.plist \
 		> $(LAUNCH_AGENTS)/com.whisper.server.plist
 	@echo "Installed com.whisper.server.plist"
 
