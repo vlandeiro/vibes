@@ -45,6 +45,12 @@
 - [ ] **Silence-Triggered Auto-Stop**
   - Reuse the existing sox meter pipeline to detect N consecutive seconds of silence.
   - Automatically call `stopAndProcess()` when the silence threshold is exceeded, without requiring a second hotkey press.
+- [ ] **Continuous Dictation Mode**
+  - A new mode where recording never fully stops between utterances. Silence detection marks chunk boundaries rather than ending the session.
+  - On silence: flush the current audio buffer, immediately start a new recording buffer, and send the previous chunk to Whisper — all without interrupting the user.
+  - Pipeline is parallelized: while chunk N is being Ollama-cleaned, chunk N+1 is already being Whisper-transcribed. Output each chunk at the cursor as its Ollama step completes.
+  - Same hotkey toggle stops the session. If stopped mid-speech (before silence is detected), the current partial chunk is flushed and pushed through the full Whisper → Ollama pipeline before the session closes.
+  - LLM cleaning applies to every chunk, same as normal mode.
 - [ ] **Max Duration Guard**
   - Cap recording at a configurable duration (e.g., 90 seconds).
   - Flash the waveform icon near the limit and auto-submit when reached, preventing runaway recordings.
