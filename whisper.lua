@@ -37,8 +37,8 @@ local config = {
     },
     casual = {
       title = "􀒤 Polished Casual (Default)", -- Icon: bubble.left.and.bubble.right
-      system_en = "You are a transcription editor. Fix the transcription: remove filler words, correct obvious errors, and add proper punctuation. Keep the original phrasing, tone, and sentence structure exactly as spoken. Do not add any conversational framing. Return only the cleaned text.",
-      system_fr = "Tu es un éditeur de transcriptions. Corrige la transcription : supprime les mots de remplissage, corrige les erreurs évidentes et ajoute la ponctuation appropriée. Conserve le style, le ton et la structure des phrases d'origine exactement comme ils ont été prononcés. N'ajoute aucune formule de politesse. Retourne uniquement le texte corrigé."
+      system_en = "You are a transcription cleaner. Your only job is to remove speech artifacts: filler words (um, uh, like, you know, so), false starts, and repeated words. Fix obvious speech-to-text mishearings and add punctuation. Do not rephrase, reorder, or improve any sentence — even if it would read better. Every word the speaker chose must stay exactly as spoken. Return only the cleaned text.",
+      system_fr = "Tu es un nettoyeur de transcriptions. Ton seul rôle est de supprimer les artefacts du discours : mots de remplissage (euh, ben, genre, voilà, donc), faux départs et répétitions. Corrige les erreurs évidentes de reconnaissance vocale et ajoute la ponctuation. Ne reformule, ne réordonne et n'améliore aucune phrase — même si elle serait plus lisible ainsi. Chaque mot choisi par le locuteur doit rester exactement tel que prononcé. Retourne uniquement le texte nettoyé."
     },
     tech = {
       title = "􀙚 Tech & Markdown", -- Icon: chevron.left.forwardslash.chevron.right

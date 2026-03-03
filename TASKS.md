@@ -30,6 +30,26 @@
 - [ ] **Build Deep Context-Aware Code Mode**
   - Extend Hammerspoon's active window detection to read the current file extension or window title.
   - Dynamically inject the active language into the Ollama system prompt. For example, if editing a `.rs`, `.py`, or `.svelte` file, instruct Ollama to output valid syntax for that environment.
+- [ ] **Emacs Native Text Insertion**
+  - At recording start, capture the Emacs buffer name and cursor position via `emacsclient --eval`.
+  - After transcription and cleaning, insert the final text directly into the buffer at the captured position using `emacsclient --eval "(with-current-buffer ... (goto-char ...) (insert ...))"` instead of simulating key events.
+  - This eliminates cursor-drift issues (the insertion point is fixed at the moment the hotkey was pressed, regardless of where the cursor moved during the Whisper/Ollama pipeline).
+  - For continuous dictation mode, track a moving insertion marker that advances as text is appended, so mid-session cursor movement still lands output in the right place.
+  - Automatically activate when Emacs is the frontmost application at recording start.
+
+- [ ] **Emacs Marker-Based Insertion for Continuous Dictation**
+  - Instead of capturing a cursor position as an integer (which becomes stale if the buffer is edited), create an Emacs marker at recording start: `(copy-marker (point))`.
+  - Markers are buffer-internal objects that automatically advance when text is inserted before them, so mid-session edits (auto-indentation, other commands) never desync the insertion point.
+  - Each chunk in continuous mode appends after the previous chunk's end, which can itself be tracked as a second marker that moves forward with each insert.
+  - On session end, delete both markers to avoid memory leaks: `(set-marker marker nil)`.
+
+- [ ] **Shell Command Intent Mode (Eshell / vterm)**
+  - Detect when the frontmost Emacs buffer is a terminal (`eshell-mode`, `vterm-mode`, `term-mode`, `comint-mode`).
+  - In this context, skip transcription cleaning entirely and instead route the raw Whisper text through a dedicated Ollama prompt whose job is to translate natural language into a single executable shell command.
+  - Example: "show me which files have been modified since yesterday" → `git diff --name-only @{yesterday}`. "find all Lua files larger than 10 kilobytes" → `find . -name "*.lua" -size +10k`.
+  - Output the command into the terminal buffer at the prompt line (via `emacsclient --eval "(with-current-buffer ... (goto-char (point-max)) (insert ...))"`) so the user can review and press Enter to run it — never execute automatically.
+  - Optionally add a brief natural-language comment above the command explaining what it does, for discoverability.
+
 - [ ] **Develop Selection-Aware Editing (In-Place Refactoring)**
   - Create a new "Edit" mode hotkey.
   - When triggered, programmatically copy the currently highlighted text to the clipboard.
