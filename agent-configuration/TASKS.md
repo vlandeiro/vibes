@@ -17,8 +17,8 @@
 
 ## Phase 3: Injection
 
-- [ ] CLI entry point (`agents-resolve` or similar) — reads an `AGENTS.md` path, runs traversal, outputs assembled markdown to stdout
-- [ ] Claude Code adapter — `SessionStart` hook that calls the CLI and injects output into system prompt
+- [x] CLI entry point (`agents-resolve` or similar) — reads an `AGENTS.md` path, runs traversal, outputs assembled markdown to stdout
+- [x] Claude Code adapter — `SessionStart` hook that calls the CLI and injects output into system prompt
 
 ## Phase 4: Tooling
 
