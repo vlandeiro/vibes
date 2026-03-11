@@ -23,7 +23,7 @@ local config = {
   audio_speed = 1.5,
   whisper_url = "http://127.0.0.1:49440/inference",
   ollama_url  = "http://localhost:49450/api/generate",
-  ollama_model = "qwen2.5:7b",
+  ollama_model = "qwen3.5:4b",
   ollama_num_ctx = 8192,
 
   -- Visual Meter Configuration
@@ -37,33 +37,33 @@ local config = {
     },
     casual = {
       title = "􀒤 Polished Casual (Default)", -- Icon: bubble.left.and.bubble.right
-      system_en = "You are a transcription cleaner. Your only job is to remove speech artifacts: filler words (um, uh, like, you know, so), false starts, and repeated words. Fix obvious speech-to-text mishearings and add punctuation. Do not rephrase, reorder, or improve any sentence — even if it would read better. Every word the speaker chose must stay exactly as spoken. Return only the cleaned text.",
-      system_fr = "Tu es un nettoyeur de transcriptions. Ton seul rôle est de supprimer les artefacts du discours : mots de remplissage (euh, ben, genre, voilà, donc), faux départs et répétitions. Corrige les erreurs évidentes de reconnaissance vocale et ajoute la ponctuation. Ne reformule, ne réordonne et n'améliore aucune phrase — même si elle serait plus lisible ainsi. Chaque mot choisi par le locuteur doit rester exactement tel que prononcé. Retourne uniquement le texte nettoyé."
+      system_en = "You are a transcription cleaner. Remove only these specific artifacts: filler words (um, uh, like, you know, so, well, I mean, right), false starts where the speaker restarts a sentence, and immediately repeated words. Fix obvious speech-to-text mishearings and add punctuation. Preserve the speaker's original wording, sentence structure, and vocabulary — do not rephrase, reorder, summarize, or improve anything. When in doubt, keep the word. Return only the cleaned text.",
+      system_fr = "Tu es un nettoyeur de transcriptions. Supprime uniquement ces artefacts spécifiques : mots de remplissage (euh, ben, genre, voilà, donc, enfin, quoi, hein), faux départs où le locuteur recommence une phrase, et mots immédiatement répétés. Corrige les erreurs évidentes de reconnaissance vocale et ajoute la ponctuation. Préserve le vocabulaire, la structure des phrases et les choix de mots du locuteur — ne reformule, ne réordonne, ne résume et n'améliore rien. En cas de doute, garde le mot. Retourne uniquement le texte nettoyé."
     },
     tech = {
       title = "􀙚 Tech & Markdown", -- Icon: chevron.left.forwardslash.chevron.right
-      system_en = "Format the transcription into clean Markdown. Ensure programming languages, libraries, and system design concepts are capitalized correctly. Wrap inline code, function names, or file paths in backticks. Remove filler words. Return only the Markdown text.",
-      system_fr = "Formate la transcription en Markdown propre. Assure-toi que les langages de programmation, les bibliothèques et les concepts d'architecture système sont correctement mis en majuscules. Entoure le code en ligne, les noms de fonctions ou les chemins de fichiers avec des accents graves (backticks). Supprime les mots de remplissage. Retourne uniquement le texte Markdown."
+      system_en = "Clean up the transcription as a single Markdown paragraph. Capitalize technical terms correctly (e.g., JavaScript, PostgreSQL, macOS, TypeScript, Redis, Kubernetes). Wrap inline code, function names, CLI commands, and file paths in backticks. Remove filler words and fix transcription errors. Do not add headings, bullet points, or restructure the text. Return only the Markdown text.",
+      system_fr = "Nettoie la transcription en un seul paragraphe Markdown. Mets correctement en majuscules les termes techniques (ex. : JavaScript, PostgreSQL, macOS, TypeScript, Redis, Kubernetes). Entoure le code en ligne, les noms de fonctions, les commandes CLI et les chemins de fichiers avec des backticks. Supprime les mots de remplissage et corrige les erreurs de transcription. N'ajoute pas de titres, de listes à puces et ne restructure pas le texte. Retourne uniquement le texte Markdown."
     },
     translate = {
       title = "􀄐 Cross-Translator", -- Icon: arrow.left.arrow.right.square
-      system_en = "If the text is in French, translate it perfectly into conversational, natural English. If the text is in English, translate it perfectly into natural French. Fix any transcription errors and output only the translated text.",
-      system_fr = "Si le texte est en français, traduis-le parfaitement en un anglais conversationnel et naturel. Si le texte est en anglais, traduis-le parfaitement en un français naturel. Corrige toutes les erreurs de transcription et retourne uniquement le texte traduit."
+      system_en = "Translate the transcription between French and English. If the text is primarily in French (even with some English words mixed in), translate everything into natural, conversational English. If the text is in English, translate it into natural, conversational French. Match the formality level of the original. Fix any transcription errors and remove filler words. Return only the translated text.",
+      system_fr = "Traduis la transcription entre le français et l'anglais. Si le texte est principalement en français (même avec quelques mots anglais), traduis tout en anglais naturel et conversationnel. Si le texte est en anglais, traduis-le en français naturel et conversationnel. Respecte le niveau de formalité de l'original. Corrige les erreurs de transcription et supprime les mots de remplissage. Retourne uniquement le texte traduit."
     },
     notes = {
       title = "􀼏 Structured Notes", -- Icon: list.bullet.clipboard
-      system_en = "You are an executive assistant. Turn the following transcription into a clean, concise list of bullet points. Group related ideas together. Remove all filler and conversational fluff. Output only the bulleted list.",
-      system_fr = "Tu es un assistant de direction. Transforme la transcription suivante en une liste à puces propre et concise. Regroupe les idées similaires. Supprime tout le remplissage et le bla-bla conversationnel. Retourne uniquement la liste à puces."
+      system_en = "You are an executive assistant. Turn the transcription into a flat list of bullet points, one per distinct idea or action item. Use concise, complete sentences. Remove filler words and conversational fluff. Do not add headings, sub-bullets, numbering, or commentary. Return only the bulleted list.",
+      system_fr = "Tu es un assistant de direction. Transforme la transcription en une liste à puces plate, une par idée distincte ou action à réaliser. Utilise des phrases concises et complètes. Supprime les mots de remplissage et le bla-bla conversationnel. N'ajoute pas de titres, de sous-puces, de numérotation ou de commentaires. Retourne uniquement la liste à puces."
     },
     email = {
       title = "􀍕 Professional Email", -- Icon: envelope
-      system_en = "You are an executive assistant. Transform the following dictation into a professional, well-structured email. Fix any transcription errors, remove filler words, and ensure the tone is polite, clear, and concise. Add appropriate paragraph breaks. Return only the email text.",
-      system_fr = "Tu es un assistant de direction. Transforme la dictée suivante en un e-mail professionnel et bien structuré. Corrige les erreurs de transcription, supprime les mots de remplissage et assure-toi que le ton est poli, clair et concis. Ajoute des sauts de paragraphe appropriés. Retourne uniquement le texte de l'e-mail."
+      system_en = "You are an executive assistant. Transform the dictation into a professional email. Start with a casual greeting (Hello, Hi) and end with a casual closing (Best, Thanks, Cheers). Keep the tone clear and polite but not overly formal. Fix transcription errors and remove filler words. Add paragraph breaks between distinct topics. Do not add a subject line. Return only the email text.",
+      system_fr = "Tu es un assistant de direction. Transforme la dictée en un e-mail professionnel. Commence par une salutation décontractée (Bonjour, Salut) et termine par une formule de politesse légère (Cordialement, Merci, Bonne journée). Garde un ton clair et poli mais pas trop formel. Corrige les erreurs de transcription et supprime les mots de remplissage. Ajoute des sauts de paragraphe entre les sujets distincts. N'ajoute pas de ligne d'objet. Retourne uniquement le texte de l'e-mail."
     },
     message = {
       title = "􀈟 Quick Message (Slack/Text)", -- Icon: paperplane
-      system_en = "You are an assistant helping draft a quick communication. Transform the following transcription into a casual, friendly message suitable for Slack, Teams, or a text message. Keep it concise, sound natural, and fix any transcription errors or filler words. Return only the message text.",
-      system_fr = "Tu es un assistant qui aide à rédiger une communication rapide. Transforme la transcription suivante en un message décontracté et amical, adapté pour Slack, Teams ou un SMS. Garde-le concis, assure-toi qu'il sonne naturel, et corrige les erreurs de transcription ou les mots de remplissage. Retourne uniquement le texte du message."
+      system_en = "Transform the transcription into a message suitable for Slack or text. Use a casual, natural tone — write like a real person, not an assistant. Remove filler words and fix transcription errors. Do not add greetings, sign-offs, or formatting unless the speaker explicitly included them. Return only the message text.",
+      system_fr = "Transforme la transcription en un message adapté pour Slack ou SMS. Utilise un ton décontracté et naturel — écris comme une vraie personne, pas comme un assistant. Supprime les mots de remplissage et corrige les erreurs de transcription. N'ajoute pas de salutations, de formules de politesse ou de mise en forme sauf si le locuteur les a explicitement inclus. Retourne uniquement le texte du message."
     }
   },
 
@@ -366,7 +366,8 @@ local function cleanTranscription(rawText, language, outputMode, callback)
     prompt  = rawText,
     system  = systemPrompt,
     stream  = true,
-    options = { num_ctx = config.ollama_num_ctx }
+    options = { num_ctx = config.ollama_num_ctx },
+    think = false
   }
 
   local fullCleanedText = ""
@@ -396,10 +397,17 @@ local function cleanTranscription(rawText, language, outputMode, callback)
     return true
   end
 
+  -- Build reproducible curl command for debugging
+  local jsonPayload = hs.json.encode(payload)
+  local curlCmd = string.format(
+    "curl -s -N --max-time 60 -X POST %s -H 'Content-Type: application/json' -d '%s'",
+    config.ollama_url, jsonPayload:gsub("'", "'\\''")
+  )
+
   -- Added `--max-time 60` to prevent indefinite hangs
   hs.task.new(config.curl, function(code, stdout, stderr)
     if code ~= 0 then
-      logError("Ollama API Request", stderr)
+      logError("Ollama API Request", stderr .. "\nReproduce with:\n" .. curlCmd)
       setStatus("error")
       return
     end
@@ -454,9 +462,17 @@ local function stopAndProcess(outputMode)
       table.insert(curlArgs, "prompt=" .. table.concat(customWords, ", "))
     end
 
+    -- Build reproducible curl command for debugging
+    local whisperCurlCmd = "curl -s --max-time 60 -X POST " .. config.whisper_url
+      .. " -F 'file=@" .. config.fast_file .. "'"
+      .. " -F 'response_format=verbose_json'"
+    if #customWords > 0 then
+      whisperCurlCmd = whisperCurlCmd .. " -F 'prompt=" .. table.concat(customWords, ", ") .. "'"
+    end
+
     hs.task.new(config.curl, function(code, stdout, stderr)
       if code ~= 0 then
-        logError("Whisper API Request", stderr)
+        logError("Whisper API Request", stderr .. "\nReproduce with:\n" .. whisperCurlCmd)
         setStatus("error")
         return
       end
