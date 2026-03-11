@@ -73,6 +73,7 @@ local config = {
   custom_words_file = os.getenv("HOME") .. "/.hammerspoon/whisper_words.txt",
 
   emacs_app_name      = "Emacs",
+  emacsclient         = "/opt/homebrew/bin/emacsclient",
   emacs_project_file  = "/tmp/whisper_active_emacs_project",
   project_words_file  = ".whisper_words.txt",
 
@@ -331,6 +332,60 @@ local function loadCustomWords()
   return words
 end
 
+-- Escape a string for safe embedding inside an Elisp double-quoted string.
+-- Single quotes are escaped as octal \47 to avoid breaking the shell single-quoting layer.
+local function elispEscape(s)
+  return s:gsub("\\", "\\\\"):gsub('"', '\\"'):gsub("'", "\\47"):gsub("\n", "\\n"):gsub("\t", "\\t")
+end
+
+-- Run emacsclient --eval synchronously and return the result string
+local function emacsEval(expr)
+  -- Shell-escape by wrapping in single quotes and escaping embedded single quotes
+  local escaped = "'" .. expr:gsub("'", "'\\''") .. "'"
+  local cmd = config.emacsclient .. " --eval " .. escaped .. " 2>&1"
+  local handle = io.popen(cmd)
+  if not handle then
+    logError("emacsclient", "failed to popen\ncmd: " .. cmd)
+    return nil
+  end
+  local output = handle:read("*a")
+  local ok, exitType, rc = handle:close()
+  if not ok then
+    logError("emacsclient", "exit " .. tostring(rc) .. ": " .. tostring(output) .. "\ncmd: " .. cmd)
+    return nil
+  end
+  return output and output:match("^%s*(.-)%s*$")
+end
+
+-- Create an Emacs marker at point in the user's active buffer (not *server*).
+-- Returns true on success.
+local function emacsCreateMarker()
+  local result = emacsEval('(with-current-buffer (window-buffer (selected-window)) (setq whisper--marker (copy-marker (point) t)))')
+  return result ~= nil
+end
+
+-- Insert text at the whisper marker, advancing it past the inserted text.
+-- For vterm buffers, uses vterm-send-string instead of insert.
+local function emacsInsertAtMarker(text)
+  local escaped = elispEscape(text)
+  emacsEval(string.format(
+    '(when (and (boundp (quote whisper--marker)) (markerp whisper--marker)) (with-current-buffer (marker-buffer whisper--marker) (if (derived-mode-p (quote vterm-mode)) (vterm-send-string "%s") (save-excursion (goto-char whisper--marker) (insert "%s")))))',
+    escaped, escaped
+  ))
+end
+
+-- Delete the whisper marker to avoid leaking.
+local function emacsCleanupMarker()
+  emacsEval('(when (and (boundp (quote whisper--marker)) (markerp whisper--marker)) (set-marker whisper--marker nil) (makunbound (quote whisper--marker)))')
+end
+
+-- Clean up Emacs marker if one exists in the current recording context.
+local function cleanupRecordingMarker()
+  if recordingContext and recordingContext.emacsMarker then
+    emacsCleanupMarker()
+  end
+end
+
 local function appendToHistory(rawText, cleanedText, language, outputMode)
   local f = io.open(config.history_file, "a")
   if not f then return end
@@ -339,11 +394,18 @@ local function appendToHistory(rawText, cleanedText, language, outputMode)
   f:close()
 end
 
+
 -- Updated to handle outputMode directly and stream line-by-line
 local function cleanTranscription(rawText, language, outputMode, callback)
+  local useEmacsMarker = recordingContext and recordingContext.emacsMarker and outputMode == "type"
+
   if current_mode == "raw" then
     if outputMode == "type" then
-      hs.eventtap.keyStrokes(rawText)
+      if useEmacsMarker then
+        emacsInsertAtMarker(rawText)
+      else
+        hs.eventtap.keyStrokes(rawText)
+      end
     elseif outputMode == "clipboard" then
       hs.pasteboard.setContents(rawText)
     end
@@ -387,8 +449,7 @@ local function cleanTranscription(rawText, language, outputMode, callback)
         local ok, parsed = pcall(hs.json.decode, line)
         if ok and parsed and parsed.response then
           fullCleanedText = fullCleanedText .. parsed.response
-          -- Instantly type it out if in type mode
-          if outputMode == "type" then
+          if outputMode == "type" and not useEmacsMarker then
             hs.eventtap.keyStrokes(parsed.response)
           end
         end
@@ -408,6 +469,7 @@ local function cleanTranscription(rawText, language, outputMode, callback)
   hs.task.new(config.curl, function(code, stdout, stderr)
     if code ~= 0 then
       logError("Ollama API Request", stderr .. "\nReproduce with:\n" .. curlCmd)
+      cleanupRecordingMarker()
       setStatus("error")
       return
     end
@@ -417,7 +479,7 @@ local function cleanTranscription(rawText, language, outputMode, callback)
        local ok, parsed = pcall(hs.json.decode, streamBuffer)
        if ok and parsed and parsed.response then
          fullCleanedText = fullCleanedText .. parsed.response
-         if outputMode == "type" then
+         if outputMode == "type" and not useEmacsMarker then
            hs.eventtap.keyStrokes(parsed.response)
          end
        end
@@ -426,7 +488,9 @@ local function cleanTranscription(rawText, language, outputMode, callback)
     -- Trim whitespace for history/clipboard
     fullCleanedText = fullCleanedText:match("^%s*(.-)%s*$") or fullCleanedText
 
-    if outputMode == "clipboard" then
+    if useEmacsMarker then
+      emacsInsertAtMarker(fullCleanedText)
+    elseif outputMode == "clipboard" then
       hs.pasteboard.setContents(fullCleanedText)
     end
 
@@ -447,6 +511,7 @@ local function stopAndProcess(outputMode)
   hs.task.new(config.ffmpeg, function(code, stdout, stderr)
     if code ~= 0 then
       logError("FFmpeg Speedup", stderr)
+      cleanupRecordingMarker()
       setStatus("error")
       return
     end
@@ -473,6 +538,7 @@ local function stopAndProcess(outputMode)
     hs.task.new(config.curl, function(code, stdout, stderr)
       if code ~= 0 then
         logError("Whisper API Request", stderr .. "\nReproduce with:\n" .. whisperCurlCmd)
+        cleanupRecordingMarker()
         setStatus("error")
         return
       end
@@ -485,10 +551,12 @@ local function stopAndProcess(outputMode)
 
         cleanTranscription(text, language, outputMode, function(cleanedText)
           appendToHistory(text, cleanedText, language, outputMode)
+          cleanupRecordingMarker()
           setStatus("idle")
         end)
       else
         logError("Whisper JSON Decode", "Failed to parse response: " .. tostring(stdout))
+        cleanupRecordingMarker()
         setStatus("error")
       end
     end, curlArgs):start()
@@ -501,7 +569,12 @@ end
 
 local function startRecording()
   local frontApp = hs.application.frontmostApplication()
-  recordingContext = { emacsActive = frontApp and frontApp:name() == config.emacs_app_name }
+  local isEmacs = frontApp and frontApp:name() == config.emacs_app_name
+  recordingContext = { emacsActive = isEmacs, emacsMarker = false }
+
+  if isEmacs then
+    recordingContext.emacsMarker = emacsCreateMarker()
+  end
 
   setStatus("recording")
 
@@ -538,7 +611,8 @@ hs.hotkey.bind(config.hotkey_cancel.mods, config.hotkey_cancel.key, function()
   end
   stopWaveform()
   recordingJob:terminate()
-  recordingJob     = nil
+  recordingJob = nil
+  cleanupRecordingMarker()
   recordingContext = nil
   setStatus("idle")
 end)

@@ -30,18 +30,16 @@
 - [ ] **Build Deep Context-Aware Code Mode**
   - Extend Hammerspoon's active window detection to read the current file extension or window title.
   - Dynamically inject the active language into the Ollama system prompt. For example, if editing a `.rs`, `.py`, or `.svelte` file, instruct Ollama to output valid syntax for that environment.
-- [ ] **Emacs Native Text Insertion**
-  - At recording start, capture the Emacs buffer name and cursor position via `emacsclient --eval`.
-  - After transcription and cleaning, insert the final text directly into the buffer at the captured position using `emacsclient --eval "(with-current-buffer ... (goto-char ...) (insert ...))"` instead of simulating key events.
-  - This eliminates cursor-drift issues (the insertion point is fixed at the moment the hotkey was pressed, regardless of where the cursor moved during the Whisper/Ollama pipeline).
-  - For continuous dictation mode, track a moving insertion marker that advances as text is appended, so mid-session cursor movement still lands output in the right place.
-  - Automatically activate when Emacs is the frontmost application at recording start.
+- [x] **Emacs Native Text Insertion**
+  - At recording start, capture the Emacs buffer and cursor position via `emacsclient --eval` using `(with-current-buffer (window-buffer (selected-window)) (copy-marker (point) t))`.
+  - After transcription and cleaning, insert the final text directly into the buffer at the captured marker position.
+  - Marker has insertion type `t` so it advances past inserted text, supporting future continuous dictation.
+  - Handles vterm buffers via `vterm-send-string` instead of `insert`.
+  - Automatically activates when Emacs is the frontmost application at recording start.
+  - **Known issue:** Ghostty quick mode overlay may cause false Emacs detection via `hs.application.frontmostApplication()`.
 
 - [ ] **Emacs Marker-Based Insertion for Continuous Dictation**
-  - Instead of capturing a cursor position as an integer (which becomes stale if the buffer is edited), create an Emacs marker at recording start: `(copy-marker (point))`.
-  - Markers are buffer-internal objects that automatically advance when text is inserted before them, so mid-session edits (auto-indentation, other commands) never desync the insertion point.
-  - Each chunk in continuous mode appends after the previous chunk's end, which can itself be tracked as a second marker that moves forward with each insert.
-  - On session end, delete both markers to avoid memory leaks: `(set-marker marker nil)`.
+  - The marker infrastructure is in place (insertion type `t`). Remaining work: track a second marker for chunk boundaries, handle mid-session edits, and integrate with the continuous dictation mode from Phase 4.
 
 - [ ] **Shell Command Intent Mode (Eshell / vterm)**
   - Detect when the frontmost Emacs buffer is a terminal (`eshell-mode`, `vterm-mode`, `term-mode`, `comint-mode`).
