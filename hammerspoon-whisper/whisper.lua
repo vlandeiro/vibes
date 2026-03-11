@@ -23,7 +23,7 @@ local config = {
   audio_speed = 1.5,
   whisper_url = "http://127.0.0.1:49440/inference",
   ollama_url  = "http://localhost:49450/api/generate",
-  ollama_model = "qwen3.5:4b",
+  ollama_model = "qwen3.5:9b",
   ollama_num_ctx = 8192,
 
   -- Visual Meter Configuration
