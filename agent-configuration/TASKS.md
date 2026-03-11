@@ -2,10 +2,10 @@
 
 ## Phase 1: Foundation
 
-- [ ] Create `~/.agents/` directory structure (`personas/`, `skills/`, `memory/`)
-- [ ] Write seed content: one persona (`developer.md`), one skill (`conventional-commits.md`), one memory file (`coding-rules.md`) with wikilinks between them
-- [ ] Write a sample `AGENTS.md` that links into the seed files
-- [ ] Decide wikilink resolution convention: filename match (flat) vs path match (preserving directory structure)
+- [x] Create `~/.agents/` directory structure (`personas/`, `skills/`, `memory/`)
+- [x] Write seed content: one persona (`developer.md`), one skill (`conventional-commits.md`), one memory file (`coding-rules.md`) with wikilinks between them
+- [x] Write a sample `AGENTS.md` that links into the seed files
+- [x] Decide wikilink resolution convention: filename match (flat) vs path match (preserving directory structure) — **chosen: path match**
 
 ## Phase 2: Core Traversal
 
