@@ -22,9 +22,9 @@
 
 ## Phase 4: Tooling
 
-- [ ] Lint: link direction validation (links should go specific -> general only)
-- [ ] Lint: orphan node detection (files in `~/.agents/` not reachable from any `AGENTS.md`)
-- [ ] Lint: fan-out warning (nodes exceeding a link count threshold)
+- [x] Lint: link direction validation (links should go specific -> general only)
+- [x] Lint: orphan node detection (files in `~/.agents/` not reachable from any `AGENTS.md`)
+- [x] Lint: fan-out warning (nodes exceeding a link count threshold)
 
 ## Phase 5: Adapters
 
