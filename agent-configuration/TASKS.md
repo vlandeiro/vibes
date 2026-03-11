@@ -1,0 +1,31 @@
+# Tasks
+
+## Phase 1: Foundation
+
+- [ ] Create `~/.agents/` directory structure (`personas/`, `skills/`, `memory/`)
+- [ ] Write seed content: one persona (`developer.md`), one skill (`conventional-commits.md`), one memory file (`coding-rules.md`) with wikilinks between them
+- [ ] Write a sample `AGENTS.md` that links into the seed files
+- [ ] Decide wikilink resolution convention: filename match (flat) vs path match (preserving directory structure)
+
+## Phase 2: Core Traversal
+
+- [ ] Wikilink parser — extract `[[target]]`, `[[target|depth=N]]`, `[[target|traverse]]` from markdown content
+- [ ] File resolver — map wikilink target to absolute path within `~/.agents/` (or external path for `~/...` targets)
+- [ ] BFS traversal with per-link depth control and deduplication
+- [ ] Second brain boundary rule — external links are terminal by default; `|traverse` opts in to following their outgoing links
+- [ ] Token count estimation on assembled output (rough char/4 is fine to start)
+
+## Phase 3: Injection
+
+- [ ] CLI entry point (`agents-resolve` or similar) — reads an `AGENTS.md` path, runs traversal, outputs assembled markdown to stdout
+- [ ] Claude Code adapter — `SessionStart` hook that calls the CLI and injects output into system prompt
+
+## Phase 4: Tooling
+
+- [ ] Lint: link direction validation (links should go specific -> general only)
+- [ ] Lint: orphan node detection (files in `~/.agents/` not reachable from any `AGENTS.md`)
+- [ ] Lint: fan-out warning (nodes exceeding a link count threshold)
+
+## Phase 5: Adapters
+
+- [ ] Adapter interface for other agents (Cursor, Aider, etc.)

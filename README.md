@@ -7,3 +7,4 @@ Each project lives here while it's being iterated on. When something proves its 
 ## Projects
 
 - **hammerspoon-whisper** — Voice dictation integration for macOS via Hammerspoon and Whisper
+- **agent-configuration**
