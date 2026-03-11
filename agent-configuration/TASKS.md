@@ -9,11 +9,11 @@
 
 ## Phase 2: Core Traversal
 
-- [ ] Wikilink parser — extract `[[target]]`, `[[target|depth=N]]`, `[[target|traverse]]` from markdown content
-- [ ] File resolver — map wikilink target to absolute path within `~/.agents/` (or external path for `~/...` targets)
-- [ ] BFS traversal with per-link depth control and deduplication
-- [ ] Second brain boundary rule — external links are terminal by default; `|traverse` opts in to following their outgoing links
-- [ ] Token count estimation on assembled output (rough char/4 is fine to start)
+- [x] Wikilink parser — extract `[[target]]`, `[[target|depth=N]]`, `[[target|traverse]]` from markdown content
+- [x] File resolver — map wikilink target to absolute path within `~/.agents/` (or external path for `~/...` targets)
+- [x] BFS traversal with per-link depth control and deduplication
+- [x] Second brain boundary rule — external links are terminal by default; `|traverse` opts in to following their outgoing links
+- [x] Token count estimation on assembled output (rough char/4 is fine to start)
 
 ## Phase 3: Injection
 

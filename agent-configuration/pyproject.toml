@@ -1,0 +1,13 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agent-configuration"
+version = "0.1.0"
+description = "Agent memory graph — selective context injection for AI agents"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+agents-resolve = "agent_configuration.cli:main"
