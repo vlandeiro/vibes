@@ -11,4 +11,3 @@ dependencies = []
 
 [project.scripts]
 agents = "agent_configuration.cli:main"
-agents-resolve = "agent_configuration.cli:main"
