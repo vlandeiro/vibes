@@ -93,10 +93,6 @@ local recordingContext = nil
 local whisperStatus    = "idle"
 local menuIcon         = nil
 local iconImages       = {}
-local meterJob         = nil
-local waveTimer        = nil
-local currentLevel     = 0
-local meterOffset      = 0
 
 -- Animation state
 local statusTimer      = nil
@@ -171,31 +167,33 @@ end
 local function animateStatusIcon()
   if whisperStatus ~= "transcribing" and whisperStatus ~= "cleaning" then return end
 
-  statusAnimPhase = statusAnimPhase + 0.15
-  local char = config.icons[whisperStatus]
-  local c = hs.canvas.new({x=0, y=0, w=22, h=22})
+  -- Rolling sine wave across bars: gives a "thinking" feel distinct from recording
+  statusAnimPhase = statusAnimPhase + 0.10
 
-  c[1] = {
-    type = "text",
-    text = hs.styledtext.new(char, {
-      font  = { name = "SF Pro", size = 16 },
-      color = { white = 0, alpha = 1.0 },
-      paragraphStyle = { alignment = "center" }
-    }),
-    frame = { x=0, y=2, w=22, h=20 }
-  }
+  local num_bars = 6
+  local bar_w, gap = 3, 2
+  local w, h = 28, 22
+  local max_bar_h, min_bar_h = 16, 1
+  local startX = (w - (num_bars * bar_w + (num_bars - 1) * gap)) / 2
+  local step = (2 * math.pi) / num_bars  -- full wave spread across bars
 
-  local barW = 8
-  local max_x = 22 - barW
-  local barX = (math.sin(statusAnimPhase) + 1) / 2 * max_x
-
-  c[2] = {
-    type = "rectangle",
-    fillColor = { black = 1, alpha = 1 },
-    strokeColor = { alpha = 0 },
-    roundedRectRadii = { xRadius = 1, yRadius = 1 },
-    frame = { x = barX, y = 20, w = barW, h = 2 }
-  }
+  local c = hs.canvas.new({x=0, y=0, w=w, h=h})
+  for i = 1, num_bars do
+    local sine  = (math.sin(statusAnimPhase + (i - 1) * step) + 1) / 2
+    local bar_h = min_bar_h + (max_bar_h - min_bar_h) * sine
+    c[i] = {
+      type = "rectangle",
+      fillColor = { black = 1, alpha = 1 },
+      strokeColor = { alpha = 0 },
+      roundedRectRadii = { xRadius = 1, yRadius = 1 },
+      frame = {
+        x = startX + (i - 1) * (bar_w + gap),
+        y = (h - bar_h) / 2,
+        w = bar_w,
+        h = bar_h
+      }
+    }
+  end
 
   local img = c:imageFromCanvas()
   c:delete()
@@ -225,86 +223,353 @@ function setStatus(status)
   end
 end
 
--- Waveform: 7-bar histogram
-local function redrawWave()
+-- ============================================================
+-- VISUALIZERS
+-- ============================================================
+-- Switch between visualizations by changing ACTIVE_VISUALIZER.
+-- Each factory function returns an object with :start() / :stop().
+--
+-- Available: "waveform" | "dynamic_island"
+
+local ACTIVE_VISUALIZER = "waveform"
+
+-- Shared: read microphone RMS level from the raw meter file.
+-- Returns a smoothed level in [0, 1], updating `state.level` and `state.offset`.
+local function updateAudioLevel(state)
   local f = io.open(config.meter_raw_file, "rb")
-  if f then
-    f:seek("set", meterOffset)
+  if not f then return end
+  f:seek("set", state.offset)
+  local data = f:read(4000)
+  f:close()
+  if not (data and #data > 0) then return end
+  state.offset = state.offset + #data
+  local sum, n = 0, 0
+  for i = 1, #data do
+    local s = data:byte(i) - 128
+    sum = sum + s * s
+    n   = n + 1
+  end
+  if n > 0 then
+    local rms = math.sqrt(sum / n) / 128
+    if rms < config.meter_noise_gate then rms = 0 end
+    local target = math.min(1.0, rms * config.meter_sensitivity)
+    if target > state.level then
+      state.level = state.level * 0.1 + target * 0.9
+    else
+      state.level = state.level * 0.7 + target * 0.3
+    end
+  end
+end
+
+-- Shared: start the sox process that writes raw audio to the meter file.
+local function startMeterJob(state)
+  state.meterJob = hs.task.new(config.sox, function(code, _, stderr)
+    if code ~= 0 then logError("Sox Waveform Meter", stderr) end
+    state.meterJob = nil
+  end, { "--buffer", "800", "-d", "-t", "raw", "-r", "8000", "-c", "1",
+         "-e", "unsigned-integer", "-b", "8", config.meter_raw_file })
+  state.meterJob:start()
+end
+
+-- Shared: tear down sox and the draw timer, remove the raw file.
+local function stopMeterJob(state)
+  if state.drawTimer then state.drawTimer:stop(); state.drawTimer = nil end
+  if state.meterJob  then state.meterJob:terminate(); state.meterJob = nil end
+  os.remove(config.meter_raw_file)
+  state.level  = 0
+  state.offset = 0
+end
+
+-- ---- Visualizer: Waveform (original 7-bar histogram) ----
+
+local function createWaveformVisualizer()
+  local state = { meterJob = nil, drawTimer = nil, level = 0, offset = 0 }
+
+  local weights = {0.2, 0.5, 0.8, 1.0, 0.8, 0.5, 0.2}  -- bell curve, 6 bars outer are shorter
+  local num_bars, bar_w, gap = 6, 3, 2
+  local w, h = 28, 22
+  local max_bar_h = 16
+  local startX = (w - (num_bars * bar_w + (num_bars - 1) * gap)) / 2
+
+  local function draw()
+    updateAudioLevel(state)
+    -- sqrt curve so bars don't saturate at moderate speech levels
+    local scaled = math.sqrt(state.level)
+    local c = hs.canvas.new({x=0, y=0, w=w, h=h})
+    for i = 1, num_bars do
+      local bar_h = math.max(1, scaled * max_bar_h * weights[i])
+      c[i] = {
+        type = "rectangle",
+        fillColor = { black = 1, alpha = 1 },
+        strokeColor = { alpha = 0 },
+        roundedRectRadii = { xRadius = 1, yRadius = 1 },
+        frame = {
+          x = startX + (i - 1) * (bar_w + gap),
+          y = (h - bar_h) / 2,
+          w = bar_w,
+          h = bar_h
+        }
+      }
+    end
+    local img = c:imageFromCanvas()
+    c:delete()
+    img:template(true)
+    if menuIcon then menuIcon:setIcon(img) end
+  end
+
+  return {
+    start = function()
+      startMeterJob(state)
+      state.drawTimer = hs.timer.doEvery(0.05, draw)
+    end,
+    stop = function()
+      stopMeterJob(state)
+    end
+  }
+end
+
+-- ---- Visualizer: Dynamic Island (Apple Music-style animated bars) ----
+-- Each bar has its own time constant for tracking the global audio level.
+-- Fast bars snap up immediately; slow bars lag and linger. At any moment
+-- bars are at different stages of reacting, creating independent motion.
+
+local function createDynamicIslandVisualizer()
+  local state = { meterJob = nil, drawTimer = nil, level = 0, offset = 0 }
+
+  local num_bars = 6
+  local bar_w, gap = 3, 2
+  local w, h = 28, 22
+  local max_bar_h, min_bar_h = 16, 1
+  local startX = (w - (num_bars * bar_w + (num_bars - 1) * gap)) / 2
+
+  -- Non-monotonic time constants so adjacent bars behave differently
+  local smooths  = { 0.04, 0.48, 0.08, 0.52, 0.05, 0.22 }
+  -- Similar weights so all bars can reach meaningful heights
+  local weights  = { 0.68, 0.82, 0.70, 0.85, 0.65, 0.78 }
+
+  local bars = nil
+
+  local function draw()
+    updateAudioLevel(state)
+    local global_level = state.level
+
+    local c = hs.canvas.new({x=0, y=0, w=w, h=h})
+    for i = 1, num_bars do
+      local bar = bars[i]
+
+      -- Each bar tracks audio at its own speed
+      bar.level = bar.level + (global_level - bar.level) * bar.smooth
+
+      -- Bump scales with bar level so idle barely moves
+      bar.ttl = bar.ttl - 1
+      if bar.ttl <= 0 then
+        bar.bump = (math.random() - 0.5) * 4 * math.sqrt(bar.level + 0.02)
+        bar.ttl  = math.random(12, 28)
+      end
+
+      local scaled = math.sqrt(bar.level)
+      local bar_h = math.max(min_bar_h, math.min(max_bar_h,
+        min_bar_h + (max_bar_h - min_bar_h) * scaled * bar.weight + bar.bump))
+
+      bar.current = bar.current + (bar_h - bar.current) * 0.28
+
+      c[i] = {
+        type = "rectangle",
+        fillColor = { black = 1, alpha = 1 },
+        strokeColor = { alpha = 0 },
+        roundedRectRadii = { xRadius = 1, yRadius = 1 },
+        frame = {
+          x = startX + (i - 1) * (bar_w + gap),
+          y = (h - bar.current) / 2,
+          w = bar_w,
+          h = bar.current
+        }
+      }
+    end
+
+    local img = c:imageFromCanvas()
+    c:delete()
+    img:template(true)
+    if menuIcon then menuIcon:setIcon(img) end
+  end
+
+  return {
+    start = function()
+      bars = {}
+      for i = 1, num_bars do
+        bars[i] = {
+          level   = 0,
+          current = min_bar_h,
+          smooth  = smooths[i],
+          weight  = weights[i],
+          bump    = 0,
+          ttl     = i * 4,
+        }
+      end
+      startMeterJob(state)
+      state.drawTimer = hs.timer.doEvery(0.05, draw)
+    end,
+    stop = function()
+      stopMeterJob(state)
+      bars = nil
+    end
+  }
+end
+
+-- ---- Visualizer: Frequency Bands (IIR filter bank) ----
+-- Cascades 5 single-pole low-pass filters to split the audio into 6 bands.
+-- Each bar tracks a true frequency range, so vowels, consonants, and
+-- sibilants light up different bars independently.
+--
+-- Band cutoffs (Hz): 100 | 300 | 700 | 1500 | 3000 | 4000
+-- Band assignments:  sub | fund | F1 | F2 | upper-mid | sibilant
+
+local function createFrequencyBandVisualizer()
+  local state = { meterJob = nil, drawTimer = nil, offset = 0 }
+
+  local num_bars = 6
+  local bar_w, gap = 3, 2
+  local w, h = 28, 22
+  local max_bar_h, min_bar_h = 16, 1
+  local startX = (w - (num_bars * bar_w + (num_bars - 1) * gap)) / 2
+
+  -- alpha = 1 - exp(-2π * fc / fs), fs = 8000 Hz
+  -- Cutoffs: 100, 300, 700, 1500, 3000 Hz
+  local A = {
+    1 - math.exp(-2 * math.pi * 100  / 8000),  -- 0.076
+    1 - math.exp(-2 * math.pi * 300  / 8000),  -- 0.209
+    1 - math.exp(-2 * math.pi * 700  / 8000),  -- 0.420
+    1 - math.exp(-2 * math.pi * 1500 / 8000),  -- 0.697
+    1 - math.exp(-2 * math.pi * 3000 / 8000),  -- 0.921
+  }
+
+  -- Per-band sensitivity: higher bands need more gain (speech energy falls with frequency)
+  local SENS = { 50, 55, 65, 100, 160, 320 }
+
+  local lp          = { 0, 0, 0, 0, 0 }  -- IIR filter state
+  local band_level  = { 0, 0, 0, 0, 0, 0 }
+  local bars        = nil
+
+  local function readAndProcess()
+    local f = io.open(config.meter_raw_file, "rb")
+    if not f then return end
+    f:seek("set", state.offset)
     local data = f:read(4000)
     f:close()
-    if data and #data > 0 then
-      meterOffset = meterOffset + #data
-      local sum, n = 0, 0
-      for i = 1, #data do
-        local s = data:byte(i) - 128
-        sum = sum + s * s
-        n   = n + 1
-      end
-      if n > 0 then
-        local rms = math.sqrt(sum / n) / 128
-        if rms < config.meter_noise_gate then rms = 0 end
+    if not (data and #data > 0) then return end
+    state.offset = state.offset + #data
 
-        local targetLevel = math.min(1.0, rms * config.meter_sensitivity)
-        if targetLevel > currentLevel then
-            currentLevel = currentLevel * 0.1 + targetLevel * 0.9
-        else
-            currentLevel = currentLevel * 0.7 + targetLevel * 0.3
-        end
+    local n = #data
+    local sum = { 0, 0, 0, 0, 0, 0 }
+
+    for i = 1, n do
+      local x = (data:byte(i) - 128) / 128.0  -- normalise to -1..1
+
+      -- Update 5 cascaded low-pass filters
+      lp[1] = lp[1] + A[1] * (x     - lp[1])
+      lp[2] = lp[2] + A[2] * (x     - lp[2])
+      lp[3] = lp[3] + A[3] * (x     - lp[3])
+      lp[4] = lp[4] + A[4] * (x     - lp[4])
+      lp[5] = lp[5] + A[5] * (x     - lp[5])
+
+      -- Band signals = difference between adjacent LP outputs
+      local b1 = lp[1]               -- 0–100 Hz
+      local b2 = lp[2] - lp[1]       -- 100–300 Hz  (fundamental)
+      local b3 = lp[3] - lp[2]       -- 300–700 Hz  (F1 formant)
+      local b4 = lp[4] - lp[3]       -- 700–1500 Hz (F2 formant)
+      local b5 = lp[5] - lp[4]       -- 1500–3000 Hz
+      local b6 = x    - lp[5]        -- 3000–4000 Hz (sibilants)
+
+      sum[1] = sum[1] + b1*b1
+      sum[2] = sum[2] + b2*b2
+      sum[3] = sum[3] + b3*b3
+      sum[4] = sum[4] + b4*b4
+      sum[5] = sum[5] + b5*b5
+      sum[6] = sum[6] + b6*b6
+    end
+
+    for b = 1, num_bars do
+      local rms    = math.sqrt(sum[b] / n)
+      local target = math.min(1.0, rms * SENS[b])
+      -- Fast attack, slower decay
+      if target > band_level[b] then
+        band_level[b] = band_level[b] * 0.15 + target * 0.85
+      else
+        band_level[b] = band_level[b] * 0.70 + target * 0.30
       end
     end
   end
 
-  local w, h = 22, 22
-  local c = hs.canvas.new({x=0, y=0, w=w, h=h})
-  local num_bars = 7
-  local weights = {0.2, 0.4, 0.7, 1.0, 0.7, 0.4, 0.2}
-  local bar_w = 2
-  local gap = 1
-  local startX = (w - (num_bars * bar_w + (num_bars - 1) * gap)) / 2
+  local function draw()
+    readAndProcess()
 
-  for i = 1, num_bars do
-    local max_bar_h = 16
-    local min_bar_h = 1
-    local bar_h = math.max(min_bar_h, currentLevel * max_bar_h * weights[i])
+    local c = hs.canvas.new({x=0, y=0, w=w, h=h})
+    for i = 1, num_bars do
+      local bar    = bars[i]
+      local scaled = math.sqrt(band_level[i])
+      local bar_h  = math.max(min_bar_h, min_bar_h + (max_bar_h - min_bar_h) * scaled)
+      bar.current  = bar.current + (bar_h - bar.current) * 0.30
 
-    c[i] = {
-      type = "rectangle",
-      fillColor = { black = 1, alpha = 1 },
-      strokeColor = { alpha = 0 },
-      roundedRectRadii = { xRadius = 1, yRadius = 1 },
-      frame = {
-        x = startX + (i - 1) * (bar_w + gap),
-        y = (h - bar_h) / 2 + 1,
-        w = bar_w,
-        h = bar_h
+      c[i] = {
+        type = "rectangle",
+        fillColor = { black = 1, alpha = 1 },
+        strokeColor = { alpha = 0 },
+        roundedRectRadii = { xRadius = 1, yRadius = 1 },
+        frame = {
+          x = startX + (i - 1) * (bar_w + gap),
+          y = (h - bar.current) / 2,
+          w = bar_w,
+          h = bar.current
+        }
       }
-    }
+    end
+
+    local img = c:imageFromCanvas()
+    c:delete()
+    img:template(true)
+    if menuIcon then menuIcon:setIcon(img) end
   end
 
-  local img = c:imageFromCanvas()
-  c:delete()
-  img:template(true)
-  if menuIcon then menuIcon:setIcon(img) end
+  return {
+    start = function()
+      lp         = { 0, 0, 0, 0, 0 }
+      band_level = { 0, 0, 0, 0, 0, 0 }
+      bars       = {}
+      for i = 1, num_bars do bars[i] = { current = min_bar_h } end
+      startMeterJob(state)
+      state.drawTimer = hs.timer.doEvery(0.05, draw)
+    end,
+    stop = function()
+      stopMeterJob(state)
+      bars = nil
+    end
+  }
 end
 
-local function startWaveform()
-  currentLevel = 0
-  meterOffset  = 0
-  meterJob = hs.task.new(config.sox, function(code, _, stderr)
-    if code ~= 0 then logError("Sox Waveform Meter", stderr) end
-    meterJob = nil
-  end, { "--buffer", "800", "-d", "-t", "raw", "-r", "8000", "-c", "1", "-e", "unsigned-integer", "-b", "8", config.meter_raw_file })
-  meterJob:start()
-  waveTimer = hs.timer.doEvery(0.05, redrawWave)
+-- ---- Visualizer registry ----
+
+local visualizerFactories = {
+  waveform         = createWaveformVisualizer,
+  dynamic_island   = createDynamicIslandVisualizer,
+  frequency_bands  = createFrequencyBandVisualizer,
+}
+
+local activeVisualizer = nil
+
+local function startVisualization()
+  local factory = visualizerFactories[ACTIVE_VISUALIZER] or visualizerFactories.waveform
+  activeVisualizer = factory()
+  activeVisualizer.start()
 end
 
-local function stopWaveform()
-  if waveTimer then waveTimer:stop(); waveTimer = nil end
-  if meterJob then meterJob:terminate(); meterJob = nil end
-  os.remove(config.meter_raw_file)
-  currentLevel = 0
-  meterOffset  = 0
+local function stopVisualization()
+  if activeVisualizer then
+    activeVisualizer.stop()
+    activeVisualizer = nil
+  end
 end
+
+-- ============================================================
 
 local function appendWordsFromFile(words, path)
   local f = io.open(path, "r")
@@ -503,7 +768,7 @@ local function cleanTranscription(rawText, language, outputMode, callback)
 end
 
 local function stopAndProcess(outputMode)
-  stopWaveform()
+  stopVisualization()
   recordingJob:terminate()
   recordingJob = nil
   setStatus("transcribing")
@@ -568,6 +833,17 @@ local function stopAndProcess(outputMode)
 end
 
 local function startRecording()
+  -- Start audio capture first, before any blocking work, to minimize lost audio at the top.
+  recordingJob = hs.task.new(config.sox, function(code, stdout, stderr)
+    if code ~= 0 then
+      logError("Sox Recording", stderr)
+      setStatus("error")
+      recordingJob = nil
+    end
+  end, { "-d", config.recording_file })
+  recordingJob:start()
+
+  -- Now do the slower setup (emacsCreateMarker is a blocking io.popen call).
   local frontApp = hs.application.frontmostApplication()
   local isEmacs = frontApp and frontApp:name() == config.emacs_app_name
   recordingContext = { emacsActive = isEmacs, emacsMarker = false }
@@ -577,17 +853,7 @@ local function startRecording()
   end
 
   setStatus("recording")
-
-  recordingJob = hs.task.new(config.sox, function(code, stdout, stderr)
-    if code ~= 0 then
-      logError("Sox Recording", stderr)
-      setStatus("error")
-      recordingJob = nil
-    end
-  end, { "-d", config.recording_file })
-
-  recordingJob:start()
-  startWaveform()
+  startVisualization()
 end
 
 hs.hotkey.bind(config.hotkey_toggle.mods, config.hotkey_toggle.key, function()
@@ -609,7 +875,7 @@ hs.hotkey.bind(config.hotkey_cancel.mods, config.hotkey_cancel.key, function()
     if whisperStatus == "error" then setStatus("idle") end
     return
   end
-  stopWaveform()
+  stopVisualization()
   recordingJob:terminate()
   recordingJob = nil
   cleanupRecordingMarker()
