@@ -442,6 +442,89 @@ opacity: 0.8;
 transform: translate(-50%, -50%);
 display: none;
 }
+
+/* Formation button wrapper */
+.fmt-btn-wrap {
+display: inline-flex;
+align-items: center;
+gap: 0;
+}
+.fmt-btn-wrap .fmt-delete {
+padding: 5px 10px !important;
+border-radius: 0 6px 6px 0 !important;
+border: none !important;
+background-color: #4a2020 !important;
+color: #e8a0a0 !important;
+font-size: 16px !important;
+font-weight: 700 !important;
+cursor: pointer !important;
+font-family: system-ui, sans-serif !important;
+line-height: 1 !important;
+min-width: 36px !important;
+min-height: 32px !important;
+display: flex !important;
+align-items: center !important;
+justify-content: center !important;
+}
+@media (prefers-color-scheme: light) {
+.fmt-btn-wrap .fmt-delete {
+background-color: #f0d0d0 !important;
+color: #993333 !important;
+}
+}
+.fmt-btn-wrap button:first-child {
+border-radius: 6px 0 0 6px;
+}
+
+.save-formation-row {
+display: flex;
+gap: 6px;
+justify-content: center;
+align-items: center;
+margin-bottom: 6px;
+}
+.save-formation-row input {
+padding: 4px 8px;
+border-radius: 6px;
+border-width: 1px;
+border-style: solid;
+border-color: #3a4a34;
+border-color: var(–panel-border);
+background-color: #1e2e18;
+background-color: var(–bench-slot-bg);
+color: #e0d8c8;
+color: var(–text);
+font-family: ‘DM Sans’, system-ui, sans-serif;
+font-size: 12px;
+font-weight: 500;
+width: 120px;
+outline: none;
+}
+@media (prefers-color-scheme: light) {
+.save-formation-row input {
+background-color: #f5f2ea;
+border-color: #c8c4b8;
+color: #2a2a20;
+color-scheme: light;
+}
+}
+.save-formation-row input::placeholder {
+color: #908870;
+color: var(–input-placeholder);
+}
+.save-formation-row button {
+padding: 4px 12px;
+border-radius: 6px;
+border: none;
+background-color: #2a3a24;
+background-color: var(–export-bg);
+color: #e0d8c8;
+color: var(–export-text);
+font-family: ‘DM Sans’, system-ui, sans-serif;
+font-size: 12px;
+font-weight: 600;
+cursor: pointer;
+}
 </style>
 
 </head>
@@ -451,6 +534,10 @@ display: none;
 <p class="subtitle">8v8 &middot; Drag to reposition &middot; Tap roster to rename &middot; Drag bench onto field to swap <span id="saveBadge" class="save-badge">&#10003; Saved</span></p>
 
 <div class="formations" id="formationBtns"></div>
+<div class="save-formation-row">
+  <input type="text" id="saveNameInput" placeholder="Formation name" maxlength="16">
+  <button id="saveFormationBtn">Save</button>
+</div>
 <div id="formationLabel" style="font-size:13px;font-weight:600;color:#f0c040;color:var(--accent);margin-bottom:12px;text-align:center;min-height:18px;"></div>
 
 <div class="main">
@@ -498,6 +585,7 @@ var FORMATIONS={
 var currentFormation="3-3-1";
 var players=FORMATIONS["3-3-1"].map(function(p){return{x:p.x,y:p.y,role:p.role,name:""};});
 var bench=[];for(var bi=0;bi<BENCH_COUNT;bi++)bench.push({name:"",role:"SUB"});
+var customFormations={};
 var editingIdx=null;
 var draggingFieldIdx=-1;
 var benchDragState=null;
@@ -513,16 +601,39 @@ function themeColors(){
   };
 }
 
+function loadCustomFormations(){
+  try{
+    var raw=localStorage.getItem(STORAGE_KEY+"_custom");
+    if(raw) customFormations=JSON.parse(raw);
+  }catch(e){customFormations={};}
+}
+function saveCustomFormations(){
+  try{localStorage.setItem(STORAGE_KEY+"_custom",JSON.stringify(customFormations));}catch(e){}
+}
+
+// Helper to get all formations (presets + custom)
+function allFormations(){
+  var all={};
+  var keys=Object.keys(FORMATIONS);
+  for(var i=0;i<keys.length;i++) all[keys[i]]=FORMATIONS[keys[i]];
+  var ckeys=Object.keys(customFormations);
+  for(var j=0;j<ckeys.length;j++) all[ckeys[j]]=customFormations[ckeys[j]];
+  return all;
+}
+
 function loadState(){
   try{
     var s=JSON.parse(localStorage.getItem(STORAGE_KEY));if(!s)return;
-    if(s.formation&&FORMATIONS[s.formation])currentFormation=s.formation;
-    if(Array.isArray(s.players)&&s.players.length===8)
+    var all=allFormations();
+    if(s.formation) currentFormation=s.formation;
+    if(Array.isArray(s.players)&&s.players.length===8){
+      var fallback=all[currentFormation]||FORMATIONS["3-3-1"];
       players=s.players.map(function(p,i){return{
-        x:typeof p.x==="number"?p.x:FORMATIONS[currentFormation][i].x,
-        y:typeof p.y==="number"?p.y:FORMATIONS[currentFormation][i].y,
-        role:p.role||FORMATIONS[currentFormation][i].role,name:p.name||""
+        x:typeof p.x==="number"?p.x:fallback[i].x,
+        y:typeof p.y==="number"?p.y:fallback[i].y,
+        role:p.role||fallback[i].role,name:p.name||""
       };});
+    }
     if(Array.isArray(s.bench)){bench=s.bench.slice(0,BENCH_COUNT).map(function(b){return{name:b.name||"",role:"SUB"};});}
     while(bench.length<BENCH_COUNT)bench.push({name:"",role:"SUB"});
   }catch(e){}
@@ -724,22 +835,77 @@ function drawAll(){drawPlayers();drawBench();drawRoster();drawFormationBtns();}
 // ── Formation buttons ──
 function drawFormationBtns(){
   var wrap=document.getElementById("formationBtns");wrap.innerHTML="";
+
+  // Preset formations
   var keys=Object.keys(FORMATIONS);
   for(var k=0;k<keys.length;k++){(function(key){
     var btn=document.createElement("button");btn.textContent=key;
     btn.className=key===currentFormation?"active":"";
     btn.addEventListener("click",function(){
-      currentFormation=key;
-      var names=players.map(function(p){return p.name;});
-      players=FORMATIONS[key].map(function(p,i){return{x:p.x,y:p.y,role:p.role,name:names[i]||""};});
-      editingIdx=null;drawFormationBtns();drawAll();saveState();
+      loadFormationByKey(key,FORMATIONS[key]);
     });
     wrap.appendChild(btn);
   })(keys[k]);}
-  // Show current formation label
+
+  // Custom formations
+  var ckeys=Object.keys(customFormations);
+  for(var c=0;c<ckeys.length;c++){(function(key){
+    var btnWrap=document.createElement("div");
+    btnWrap.className="fmt-btn-wrap";
+    var btn=document.createElement("button");
+    btn.textContent=key;
+    btn.className=key===currentFormation?"active":"";
+    btn.style.borderStyle="dashed";
+    btn.addEventListener("click",function(){
+      loadFormationByKey(key,customFormations[key]);
+    });
+    btnWrap.appendChild(btn);
+    var del=document.createElement("button");
+    del.className="fmt-delete";
+    del.textContent="\u00d7";
+    del.setAttribute("data-confirm","no");
+    del.addEventListener("click",function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      if(del.getAttribute("data-confirm")==="yes"){
+        delete customFormations[key];
+        saveCustomFormations();
+        if(currentFormation===key) currentFormation=inferFormation();
+        drawFormationBtns();
+        saveState();
+      }else{
+        del.setAttribute("data-confirm","yes");
+        del.textContent="?";
+        del.style.backgroundColor="#882222";
+        setTimeout(function(){
+          del.setAttribute("data-confirm","no");
+          del.textContent="\u00d7";
+          del.style.backgroundColor="";
+        },2000);
+      }
+    });
+    btnWrap.appendChild(del);
+    wrap.appendChild(btnWrap);
+  })(ckeys[c]);}
+
+  // Formation label
   var label=document.getElementById("formationLabel");
-  var isPreset=!!FORMATIONS[currentFormation];
-  label.textContent="Current: "+currentFormation+(isPreset?"":" (custom)");
+  var all=allFormations();
+  var isKnown=!!all[currentFormation];
+  label.textContent="Current: "+currentFormation+(isKnown?"":" (custom)");
+
+  // Update save input
+  var saveInput=document.getElementById("saveNameInput");
+  if(customFormations[currentFormation]){
+    saveInput.value=currentFormation;
+  }
+}
+
+function loadFormationByKey(key,positions){
+  currentFormation=key;
+  var names=players.map(function(p){return p.name;});
+  players=positions.map(function(p,i){return{x:p.x,y:p.y,role:p.role,name:names[i]||""};});
+  editingIdx=null;drawFormationBtns();drawAll();saveState();
 }
 
 // ── Position zone detection ──
@@ -946,9 +1112,32 @@ document.getElementById("clearBtn").addEventListener("click",function(){
   editingIdx=null;drawAll();saveState();
 });
 
+// ── Save custom formation ──
+document.getElementById("saveFormationBtn").addEventListener("click",function(){
+  var nameInput=document.getElementById("saveNameInput");
+  var name=nameInput.value.trim();
+  if(!name){nameInput.focus();return;}
+  // Don't allow overwriting presets
+  if(FORMATIONS[name]){
+    alert("Cannot overwrite a preset formation. Choose a different name.");
+    return;
+  }
+  // Save current positions (without names)
+  customFormations[name]=players.map(function(p){return{x:p.x,y:p.y,role:p.role};});
+  saveCustomFormations();
+  currentFormation=name;
+  saveState();
+  drawFormationBtns();
+});
+
+// Allow Enter key in save input
+document.getElementById("saveNameInput").addEventListener("keydown",function(e){
+  if(e.key==="Enter"){document.getElementById("saveFormationBtn").click();}
+});
+
 window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",function(){drawField();drawAll();});
 
-loadState();drawField();drawFormationBtns();drawAll();
+loadCustomFormations();loadState();drawField();drawFormationBtns();drawAll();
 </script>
 
 </body>
