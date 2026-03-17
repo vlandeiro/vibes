@@ -374,13 +374,14 @@ gap: 3px;
 .roster-row {
 display: flex;
 align-items: center;
-gap: 10px;
+gap: 8px;
 padding: 6px 10px;
 border-radius: 6px;
 cursor: pointer;
 border-width: 1px;
 border-style: solid;
 border-color: transparent;
+flex-wrap: wrap;
 }
 
 .roster-row.editing {
@@ -388,7 +389,6 @@ background-color: rgba(240,192,64,0.25);
 background-color: var(–swap-hl);
 border-color: #f0c040;
 border-color: var(–accent);
-flex-wrap: wrap;
 }
 
 .roster-row svg { flex-shrink: 0; }
@@ -425,8 +425,10 @@ color: var(–input-placeholder);
 font-size: 10px;
 color: #a89e88;
 color: var(–text-muted);
-margin-left: auto;
-white-space: nowrap;
+width: 100%;
+white-space: normal;
+margin-top: -2px;
+padding-left: 34px;
 }
 
 .roster-footer {
@@ -907,7 +909,7 @@ function drawPlayers(){
     var fill=isGK?c.gkFill:c.playerFill,stroke=isGK?c.gkStroke:c.playerStroke;
     var g=el("g",{transform:"translate("+px+","+py+")","data-idx":i,"class":"player-g"});
     g.style.cursor="grab";
-    if(!p.available)g.style.opacity="0.35";
+    if(!p.available)g.setAttribute("opacity","0.3");
     if(hlIdx===i||fieldHlIdx===i)g.appendChild(el("circle",{r:30,fill:"none",stroke:"#f0c040","stroke-width":"3",opacity:"0.8"}));
     g.appendChild(el("path",{d:JERSEY,fill:fill,stroke:stroke,"stroke-width":"1.8","stroke-linejoin":"round"}));
     g.appendChild(el("path",{d:COLLAR,fill:"none",stroke:stroke,"stroke-width":"1",opacity:"0.4"}));
@@ -1093,13 +1095,10 @@ function addSection(cont,label,items,type,c){
       setTimeout(function(){inp.focus();inp.select();},50);
     }else{
       var span=document.createElement("span");span.className="roster-name "+(item.name?"filled":"empty");
-      span.textContent=item.name||"Tap to name\u2026";row.appendChild(span);
-      /* NEW: show prefs inline */
-      if(item.prefs&&item.prefs.length>0){
-        var pt=document.createElement("span");pt.className="roster-prefs-display";
-        pt.textContent=item.prefs.join(", ");row.appendChild(pt);
-      }
-      /* NEW: stat counters */
+      span.textContent=item.name||"Tap to name\u2026";
+      span.addEventListener("click",function(ev){ev.preventDefault();ev.stopPropagation();editingIdx=eid;drawAll();});
+      row.appendChild(span);
+      /* stat counters — right-aligned on first line */
       var st=item.stats||{gp:0,g:0,a:0};
       var statDiv=document.createElement("div");statDiv.className="stat-counters";
       var statKeys=[{key:"gp",label:"GP"},{key:"g",label:"G"},{key:"a",label:"A"}];
@@ -1152,7 +1151,14 @@ function addSection(cont,label,items,type,c){
         statDiv.appendChild(wrap);
       })(sk);}
       row.appendChild(statDiv);
-      row.addEventListener("click",function(){editingIdx=eid;drawAll();});
+      /* Prefs on second line */
+      if(item.prefs&&item.prefs.length>0){
+        var pt=document.createElement("span");pt.className="roster-prefs-display";
+        pt.textContent=item.prefs.join(", ");
+        pt.style.cursor="pointer";
+        pt.addEventListener("click",function(ev){ev.preventDefault();ev.stopPropagation();editingIdx=eid;drawAll();});
+        row.appendChild(pt);
+      }
     }
     list.appendChild(row);
   })(i);}
