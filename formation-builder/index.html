@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Formation">
+<title>Formation Builder — 8v8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --field: #1a6b37;
+    --field-light: #1f7a3f;
+    --lines: rgba(255,255,255,0.45);
+    --player: #e8dcc8;
+    --player-stroke: #2d2418;
+    --player-text: #2d2418;
+    --gk: #f0c040;
+    --gk-stroke: #8a6d10;
+    --accent: #f0c040;
+    --bg: #111a0e;
+    --panel: #1a2216;
+    --panel-border: #2a3a24;
+    --text: #d4ccb8;
+    --text-muted: #8a846e;
+    --btn-bg: #2a3a24;
+    --btn-active: #f0c040;
+    --btn-active-text: #1a2216;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 12px 40px;
+    overflow-x: hidden;
+  }
+  h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 18px;
+  }
+
+/* Formation buttons */
+.formations {
+display: flex;
+flex-wrap: wrap;
+gap: 6px;
+justify-content: center;
+margin-bottom: 18px;
+max-width: 420px;
+}
+.formations button {
+padding: 6px 14px;
+border-radius: 6px;
+border: 1px solid var(–panel-border);
+background: var(–btn-bg);
+color: var(–text);
+font-family: ‘DM Sans’, sans-serif;
+font-size: 13px;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.15s;
+}
+.formations button.active {
+border-color: var(–accent);
+background: var(–btn-active);
+color: var(–btn-active-text);
+}
+
+/* Layout */
+.main {
+display: flex;
+gap: 20px;
+flex-wrap: wrap;
+justify-content: center;
+align-items: flex-start;
+width: 100%;
+max-width: 640px;
+}
+
+/* Field wrapper */
+.field-wrap {
+background: #0d1a08;
+border-radius: 12px;
+padding: 10px;
+box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+border: 1px solid var(–panel-border);
+flex: 1 1 380px;
+max-width: 400px;
+touch-action: none;
+}
+.field-wrap svg { width: 100%; display: block; border-radius: 8px; }
+
+/* Roster panel */
+.roster {
+background: var(–panel);
+border: 1px solid var(–panel-border);
+border-radius: 12px;
+padding: 16px 18px;
+min-width: 200px;
+box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+flex: 1 1 200px;
+max-width: 280px;
+}
+.roster-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 12px;
+}
+.roster-header h2 {
+font-family: ‘Instrument Serif’, serif;
+font-size: 18px;
+font-weight: 400;
+color: var(–accent);
+}
+.roster-header button {
+font-size: 11px;
+color: var(–text-muted);
+background: none;
+border: none;
+cursor: pointer;
+font-family: ‘DM Sans’, sans-serif;
+text-decoration: underline;
+text-underline-offset: 2px;
+}
+.roster-list { display: flex; flex-direction: column; gap: 4px; }
+.roster-row {
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 7px 10px;
+border-radius: 6px;
+cursor: pointer;
+border: 1px solid transparent;
+transition: all 0.15s;
+}
+.roster-row.editing {
+background: rgba(240,192,64,0.1);
+border-color: rgba(240,192,64,0.27);
+}
+.roster-row svg { flex-shrink: 0; }
+.roster-row input {
+flex: 1;
+background: transparent;
+border: none;
+outline: none;
+color: var(–text);
+font-family: ‘DM Sans’, sans-serif;
+font-size: 13px;
+font-weight: 500;
+padding: 0;
+}
+.roster-name {
+font-size: 13px;
+font-weight: 500;
+}
+.roster-name.empty {
+color: var(–text-muted);
+font-style: italic;
+}
+.roster-name.filled { color: var(–text); }
+.roster-footer {
+margin-top: 16px;
+padding-top: 12px;
+border-top: 1px solid var(–panel-border);
+font-size: 11px;
+color: var(–text-muted);
+line-height: 1.5;
+}
+.save-badge {
+display: inline-block;
+font-size: 10px;
+color: var(–accent);
+opacity: 0;
+transition: opacity 0.3s;
+margin-left: 8px;
+}
+.save-badge.show { opacity: 1; }
+
+@media (max-width: 520px) {
+body { padding: 16px 8px 32px; }
+.main { flex-direction: column; align-items: center; }
+.field-wrap { max-width: 100%; }
+.roster { max-width: 100%; min-width: 0; width: 100%; }
+}
+</style>
+
+</head>
+<body>
+
+<h1>Formation Builder</h1>
+<p class="subtitle">8v8 · Drag players to reposition · Tap roster to rename <span id="saveBadge" class="save-badge">✓ Saved</span></p>
+
+<div class="formations" id="formationBtns"></div>
+
+<div class="main">
+  <div class="field-wrap" id="fieldWrap">
+    <svg id="field" viewBox="0 0 380 560" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="roster">
+    <div class="roster-header">
+      <h2>Roster</h2>
+      <button id="clearBtn">Clear all</button>
+    </div>
+    <div class="roster-list" id="rosterList"></div>
+    <div class="roster-footer">Drag players on the pitch to fine-tune positions. State auto-saves locally.</div>
+  </div>
+</div>
+
+<script>
+const FW = 380, FH = 560, PR = 22;
+
+const FORMATIONS = {
+  "3-3-1": [
+    {x:0.5,y:0.92,role:"GK"},{x:0.2,y:0.75,role:"CB"},{x:0.5,y:0.72,role:"CB"},{x:0.8,y:0.75,role:"CB"},
+    {x:0.2,y:0.48,role:"CM"},{x:0.5,y:0.45,role:"CM"},{x:0.8,y:0.48,role:"CM"},{x:0.5,y:0.22,role:"ST"}
+  ],
+  "2-3-2": [
+    {x:0.5,y:0.92,role:"GK"},{x:0.3,y:0.75,role:"CB"},{x:0.7,y:0.75,role:"CB"},
+    {x:0.2,y:0.5,role:"LM"},{x:0.5,y:0.47,role:"CM"},{x:0.8,y:0.5,role:"RM"},
+    {x:0.35,y:0.24,role:"ST"},{x:0.65,y:0.24,role:"ST"}
+  ],
+  "3-2-2": [
+    {x:0.5,y:0.92,role:"GK"},{x:0.2,y:0.75,role:"CB"},{x:0.5,y:0.72,role:"CB"},{x:0.8,y:0.75,role:"CB"},
+    {x:0.33,y:0.48,role:"CM"},{x:0.67,y:0.48,role:"CM"},{x:0.35,y:0.24,role:"ST"},{x:0.65,y:0.24,role:"ST"}
+  ],
+  "3-1-2-1": [
+    {x:0.5,y:0.92,role:"GK"},{x:0.2,y:0.75,role:"CB"},{x:0.5,y:0.72,role:"CB"},{x:0.8,y:0.75,role:"CB"},
+    {x:0.5,y:0.55,role:"CDM"},{x:0.3,y:0.38,role:"AM"},{x:0.7,y:0.38,role:"AM"},{x:0.5,y:0.2,role:"ST"}
+  ],
+  "2-4-1": [
+    {x:0.5,y:0.92,role:"GK"},{x:0.3,y:0.75,role:"CB"},{x:0.7,y:0.75,role:"CB"},
+    {x:0.15,y:0.48,role:"LM"},{x:0.4,y:0.45,role:"CM"},{x:0.6,y:0.45,role:"CM"},{x:0.85,y:0.48,role:"RM"},
+    {x:0.5,y:0.22,role:"ST"}
+  ],
+  "2-1-2-1-1": [
+    {x:0.5,y:0.92,role:"GK"},{x:0.3,y:0.78,role:"CB"},{x:0.7,y:0.78,role:"CB"},
+    {x:0.5,y:0.6,role:"CDM"},{x:0.25,y:0.44,role:"LM"},{x:0.75,y:0.44,role:"RM"},
+    {x:0.5,y:0.3,role:"AM"},{x:0.5,y:0.16,role:"ST"}
+  ]
+};
+
+const JERSEY = "M -6 -18 L -14 -14 L -22 -8 L -18 0 L -12 -4 L -12 18 Q -12 22 -8 22 L 8 22 Q 12 22 12 18 L 12 -4 L 18 0 L 22 -8 L 14 -14 L 6 -18 Q 3 -14 0 -14 Q -3 -14 -6 -18 Z";
+const COLLAR = "M -6 -18 Q -3 -12 0 -12 Q 3 -12 6 -18";
+const NS = "http://www.w3.org/2000/svg";
+
+const STORAGE_KEY = "formation_builder_state";
+
+// ── State ──
+let currentFormation = "3-3-1";
+let players = FORMATIONS["3-3-1"].map(p => ({...p, name: ""}));
+let editingIdx = null;
+let draggingIdx = -1;
+
+// ── Load saved state ──
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    if (s.formation && FORMATIONS[s.formation]) currentFormation = s.formation;
+    if (Array.isArray(s.players) && s.players.length === 8) {
+      players = s.players.map((p, i) => ({
+        x: typeof p.x === "number" ? p.x : FORMATIONS[currentFormation][i].x,
+        y: typeof p.y === "number" ? p.y : FORMATIONS[currentFormation][i].y,
+        role: p.role || FORMATIONS[currentFormation][i].role,
+        name: p.name || ""
+      }));
+    }
+  } catch(e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ formation: currentFormation, players }));
+    const badge = document.getElementById("saveBadge");
+    badge.classList.add("show");
+    setTimeout(() => badge.classList.remove("show"), 1200);
+  } catch(e) {}
+}
+
+// debounced save for drag
+let saveTimer = null;
+function debouncedSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveState, 300);
+}
+
+// ── Draw field markings ──
+function drawField() {
+  const svg = document.getElementById("field");
+  svg.innerHTML = "";
+
+  // grass pattern
+  const defs = el("defs");
+  const pat = el("pattern", {id:"grass", patternUnits:"userSpaceOnUse", width:12, height:12});
+  pat.appendChild(el("rect", {width:12, height:12, fill:"#1a6b37"}));
+  pat.appendChild(el("rect", {x:0, y:0, width:12, height:6, fill:"#1f7a3f", opacity:0.3}));
+  defs.appendChild(pat);
+  svg.appendChild(defs);
+  svg.appendChild(el("rect", {width:FW, height:FH, fill:"url(#grass)"}));
+
+  const L = "rgba(255,255,255,0.45)";
+  // outline
+  svg.appendChild(el("rect", {x:20, y:20, width:FW-40, height:FH-40, fill:"none", stroke:L, "stroke-width":1.5}));
+  // halfway
+  svg.appendChild(el("line", {x1:20, y1:FH/2, x2:FW-20, y2:FH/2, stroke:L, "stroke-width":1.5}));
+  // center circle + dot
+  svg.appendChild(el("circle", {cx:FW/2, cy:FH/2, r:45, fill:"none", stroke:L, "stroke-width":1.5}));
+  svg.appendChild(el("circle", {cx:FW/2, cy:FH/2, r:3, fill:L}));
+  // penalty area bottom
+  svg.appendChild(el("rect", {x:(FW-180)/2, y:FH-110, width:180, height:90, fill:"none", stroke:L, "stroke-width":1.5}));
+  svg.appendChild(el("rect", {x:(FW-90)/2, y:FH-56, width:90, height:36, fill:"none", stroke:L, "stroke-width":1.5}));
+  svg.appendChild(el("circle", {cx:FW/2, cy:FH-80, r:2.5, fill:L}));
+  svg.appendChild(el("path", {d:`M ${FW/2-38} ${FH-110} A 45 45 0 0 1 ${FW/2+38} ${FH-110}`, fill:"none", stroke:L, "stroke-width":1.5}));
+  // penalty area top
+  svg.appendChild(el("rect", {x:(FW-180)/2, y:20, width:180, height:90, fill:"none", stroke:L, "stroke-width":1.5}));
+  svg.appendChild(el("rect", {x:(FW-90)/2, y:20, width:90, height:36, fill:"none", stroke:L, "stroke-width":1.5}));
+  svg.appendChild(el("circle", {cx:FW/2, cy:80, r:2.5, fill:L}));
+  svg.appendChild(el("path", {d:`M ${FW/2-38} 110 A 45 45 0 0 0 ${FW/2+38} 110`, fill:"none", stroke:L, "stroke-width":1.5}));
+  // corners
+  svg.appendChild(el("path", {d:"M 20 28 A 8 8 0 0 0 28 20", fill:"none", stroke:L, "stroke-width":1.5}));
+  svg.appendChild(el("path", {d:`M ${FW-20} 28 A 8 8 0 0 1 ${FW-28} 20`, fill:"none", stroke:L, "stroke-width":1.5}));
+  svg.appendChild(el("path", {d:`M 20 ${FH-28} A 8 8 0 0 1 28 ${FH-20}`, fill:"none", stroke:L, "stroke-width":1.5}));
+  svg.appendChild(el("path", {d:`M ${FW-20} ${FH-28} A 8 8 0 0 0 ${FW-28} ${FH-20}`, fill:"none", stroke:L, "stroke-width":1.5}));
+}
+
+function el(tag, attrs) {
+  const e = document.createElementNS(NS, tag);
+  if (attrs) Object.entries(attrs).forEach(([k,v]) => e.setAttribute(k, v));
+  return e;
+}
+
+// ── Draw players on field ──
+function drawPlayers() {
+  // remove old player groups
+  document.querySelectorAll(".player-g").forEach(e => e.remove());
+  const svg = document.getElementById("field");
+
+  players.forEach((p, i) => {
+    const px = p.x * FW, py = p.y * FH;
+    const isGK = p.role === "GK";
+    const fill = isGK ? "#f0c040" : "#e8dcc8";
+    const stroke = isGK ? "#8a6d10" : "#2d2418";
+
+    const g = el("g", {transform:`translate(${px},${py})`, "data-idx": i, class:"player-g"});
+    g.style.cursor = "grab";
+
+    // jersey
+    const jersey = el("path", {d: JERSEY, fill, stroke, "stroke-width":1.8, "stroke-linejoin":"round"});
+    g.appendChild(jersey);
+    // collar
+    g.appendChild(el("path", {d: COLLAR, fill:"none", stroke, "stroke-width":1, opacity:0.5}));
+
+    // name/role text
+    const displayName = p.name || p.role;
+    const truncated = displayName.length > 7 ? displayName.slice(0,6) + "…" : displayName;
+    const txt = el("text", {y:6, "text-anchor":"middle", "dominant-baseline":"central", fill:"#2d2418"});
+    txt.style.cssText = "font-size:10px;font-family:'DM Sans',sans-serif;font-weight:700;pointer-events:none;user-select:none;";
+    txt.textContent = truncated;
+    g.appendChild(txt);
+
+    // role label below if named
+    if (p.name) {
+      const lbl = el("text", {y:28, "text-anchor":"middle", "dominant-baseline":"central", fill:"rgba(255,255,255,0.7)"});
+      lbl.style.cssText = "font-size:9px;font-family:'DM Sans',sans-serif;font-weight:500;pointer-events:none;user-select:none;";
+      lbl.textContent = p.role;
+      g.appendChild(lbl);
+    }
+
+    // invisible hit area for easier touch
+    const hit = el("circle", {r:28, fill:"transparent"});
+    g.appendChild(hit);
+
+    svg.appendChild(g);
+  });
+}
+
+// ── Roster panel ──
+function drawRoster() {
+  const list = document.getElementById("rosterList");
+  list.innerHTML = "";
+
+  players.forEach((p, i) => {
+    const row = document.createElement("div");
+    row.className = "roster-row" + (editingIdx === i ? " editing" : "");
+    row.dataset.idx = i;
+
+    // mini jersey svg
+    const isGK = p.role === "GK";
+    row.innerHTML = `
+      <svg width="28" height="28" viewBox="-24 -20 48 44" xmlns="${NS}">
+        <path d="${JERSEY}" fill="${isGK ? '#f0c040' : '#e8dcc8'}" stroke="${isGK ? '#8a6d10' : '#2d2418'}" stroke-width="1.5" stroke-linejoin="round"/>
+        <text y="8" text-anchor="middle" dominant-baseline="central" fill="#2d2418" style="font-size:10px;font-family:'DM Sans',sans-serif;font-weight:700">${p.role}</text>
+      </svg>
+    `;
+
+    if (editingIdx === i) {
+      const inp = document.createElement("input");
+      inp.value = p.name;
+      inp.placeholder = "Player name";
+      inp.maxLength = 14;
+      inp.addEventListener("blur", () => commitEdit(i, inp.value));
+      inp.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { commitEdit(i, inp.value); }
+        if (e.key === "Escape") { editingIdx = null; drawRoster(); }
+      });
+      row.appendChild(inp);
+      // focus after append
+      requestAnimationFrame(() => { inp.focus(); inp.select(); });
+    } else {
+      const span = document.createElement("span");
+      span.className = "roster-name " + (p.name ? "filled" : "empty");
+      span.textContent = p.name || "Tap to name…";
+      row.appendChild(span);
+      row.addEventListener("click", () => { editingIdx = i; drawRoster(); });
+    }
+
+    list.appendChild(row);
+  });
+}
+
+function commitEdit(idx, val) {
+  players[idx].name = val.trim();
+  editingIdx = null;
+  drawRoster();
+  drawPlayers();
+  saveState();
+}
+
+// ── Formation buttons ──
+function drawFormationBtns() {
+  const wrap = document.getElementById("formationBtns");
+  wrap.innerHTML = "";
+  Object.keys(FORMATIONS).forEach(key => {
+    const btn = document.createElement("button");
+    btn.textContent = key;
+    btn.className = key === currentFormation ? "active" : "";
+    btn.addEventListener("click", () => loadFormation(key));
+    wrap.appendChild(btn);
+  });
+}
+
+function loadFormation(key) {
+  currentFormation = key;
+  const names = players.map(p => p.name);
+  players = FORMATIONS[key].map((p, i) => ({...p, name: names[i] || ""}));
+  editingIdx = null;
+  drawFormationBtns();
+  drawPlayers();
+  drawRoster();
+  saveState();
+}
+
+// ── Drag handling ──
+function getSVGPoint(clientX, clientY) {
+  const svg = document.getElementById("field");
+  const pt = svg.createSVGPoint();
+  pt.x = clientX; pt.y = clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+
+function onPointerDown(e) {
+  const g = e.target.closest(".player-g");
+  if (!g) return;
+  e.preventDefault();
+  draggingIdx = parseInt(g.dataset.idx);
+  g.style.cursor = "grabbing";
+  g.setPointerCapture(e.pointerId);
+}
+
+function onPointerMove(e) {
+  if (draggingIdx < 0) return;
+  e.preventDefault();
+  const pt = getSVGPoint(e.clientX, e.clientY);
+  const nx = Math.max(PR, Math.min(FW - PR, pt.x)) / FW;
+  const ny = Math.max(PR, Math.min(FH - PR, pt.y)) / FH;
+  players[draggingIdx].x = nx;
+  players[draggingIdx].y = ny;
+  // move the group directly for performance
+  const g = document.querySelector(`.player-g[data-idx="${draggingIdx}"]`);
+  if (g) g.setAttribute("transform", `translate(${nx*FW},${ny*FH})`);
+  debouncedSave();
+}
+
+function onPointerUp() {
+  if (draggingIdx < 0) return;
+  const g = document.querySelector(`.player-g[data-idx="${draggingIdx}"]`);
+  if (g) g.style.cursor = "grab";
+  draggingIdx = -1;
+}
+
+// ── Init ──
+loadState();
+drawField();
+drawPlayers();
+drawFormationBtns();
+drawRoster();
+
+const fieldEl = document.getElementById("field");
+fieldEl.addEventListener("pointerdown", onPointerDown);
+fieldEl.addEventListener("pointermove", onPointerMove);
+fieldEl.addEventListener("pointerup", onPointerUp);
+fieldEl.addEventListener("pointercancel", onPointerUp);
+
+document.getElementById("clearBtn").addEventListener("click", () => {
+  players.forEach(p => p.name = "");
+  editingIdx = null;
+  drawPlayers();
+  drawRoster();
+  saveState();
+});
+</script>
+
+</body>
+</html>
