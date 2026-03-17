@@ -451,6 +451,7 @@ display: none;
 <p class="subtitle">8v8 &middot; Drag to reposition &middot; Tap roster to rename &middot; Drag bench onto field to swap <span id="saveBadge" class="save-badge">&#10003; Saved</span></p>
 
 <div class="formations" id="formationBtns"></div>
+<div id="formationLabel" style="font-size:13px;font-weight:600;color:#f0c040;color:var(--accent);margin-bottom:12px;text-align:center;min-height:18px;"></div>
 
 <div class="main">
   <div class="pitch-col">
@@ -578,12 +579,13 @@ function drawPlayers(){
   var old=document.querySelectorAll(".player-g");for(var o=0;o<old.length;o++)old[o].remove();
   var svg=document.getElementById("field"),c=themeColors();
   var hlIdx=benchDragState&&benchDragState.active?benchDragState.targetFieldIdx:-1;
+  var fieldHlIdx=fieldDragState?fieldDragState.swapTarget:-1;
   for(var i=0;i<players.length;i++){
     var p=players[i],px=p.x*FW,py=p.y*FH,isGK=p.role==="GK";
     var fill=isGK?c.gkFill:c.playerFill,stroke=isGK?c.gkStroke:c.playerStroke;
     var g=el("g",{transform:"translate("+px+","+py+")","data-idx":i,"class":"player-g"});
     g.style.cursor="grab";
-    if(hlIdx===i)g.appendChild(el("circle",{r:30,fill:"none",stroke:"#f0c040","stroke-width":"3",opacity:"0.8"}));
+    if(hlIdx===i||fieldHlIdx===i)g.appendChild(el("circle",{r:30,fill:"none",stroke:"#f0c040","stroke-width":"3",opacity:"0.8"}));
     g.appendChild(el("path",{d:JERSEY,fill:fill,stroke:stroke,"stroke-width":"1.8","stroke-linejoin":"round"}));
     g.appendChild(el("path",{d:COLLAR,fill:"none",stroke:stroke,"stroke-width":"1",opacity:"0.4"}));
     var rt=el("text",{y:"6","text-anchor":"middle","dominant-baseline":"central",fill:c.playerText});
@@ -717,7 +719,7 @@ function addSection(cont,label,items,type,c){
     list.appendChild(row);
   })(i);}
 }
-function drawAll(){drawPlayers();drawBench();drawRoster();}
+function drawAll(){drawPlayers();drawBench();drawRoster();drawFormationBtns();}
 
 // ── Formation buttons ──
 function drawFormationBtns(){
@@ -734,34 +736,154 @@ function drawFormationBtns(){
     });
     wrap.appendChild(btn);
   })(keys[k]);}
+  // Show current formation label
+  var label=document.getElementById("formationLabel");
+  var isPreset=!!FORMATIONS[currentFormation];
+  label.textContent="Current: "+currentFormation+(isPreset?"":" (custom)");
 }
 
-// ── Field drag ──
+// ── Position zone detection ──
+// y is 0=top (attack) to 1=bottom (GK). x is 0=left to 1=right.
+function roleFromPosition(x,y){
+  // GK zone: bottom 12%
+  if(y>0.88) return "GK";
+  // Defense: 68%-88%
+  if(y>0.68){
+    if(x<0.3) return "LB";
+    if(x>0.7) return "RB";
+    return "CB";
+  }
+  // CDM: 58%-68%
+  if(y>0.58){
+    if(x<0.25) return "LM";
+    if(x>0.75) return "RM";
+    return "CDM";
+  }
+  // CM: 42%-58%
+  if(y>0.42){
+    if(x<0.25) return "LM";
+    if(x>0.75) return "RM";
+    return "CM";
+  }
+  // CAM: 30%-42%
+  if(y>0.30){
+    if(x<0.25) return "LM";
+    if(x>0.75) return "RM";
+    return "CAM";
+  }
+  // Attack: top 30%
+  if(x<0.28) return "LW";
+  if(x>0.72) return "RW";
+  return "ST";
+}
+
+// ── Formation inference from roles ──
+function inferFormation(){
+  var lines=[
+    {roles:["CB","LB","RB"],count:0},    // defense
+    {roles:["CDM"],count:0},              // def mid
+    {roles:["CM","LM","RM"],count:0},     // midfield
+    {roles:["CAM"],count:0},              // att mid
+    {roles:["ST","LW","RW"],count:0}      // attack
+  ];
+  for(var i=0;i<players.length;i++){
+    if(players[i].role==="GK") continue;
+    for(var j=0;j<lines.length;j++){
+      if(lines[j].roles.indexOf(players[i].role)>=0){lines[j].count++;break;}
+    }
+  }
+  var parts=[];
+  for(var k=0;k<lines.length;k++){
+    if(lines[k].count>0) parts.push(lines[k].count);
+  }
+  return parts.join("-");
+}
+
+function updateRolesAndFormation(){
+  for(var i=0;i<players.length;i++){
+    players[i].role=roleFromPosition(players[i].x,players[i].y);
+  }
+  currentFormation=inferFormation();
+  drawFormationBtns();
+}
+
+// ── Field drag with swap + auto-role ──
 var fieldEl=document.getElementById("field");
+var fieldDragState=null; // {idx, startX, startY, swapTarget}
+
 function getSVGPoint(cx,cy){var pt=fieldEl.createSVGPoint();pt.x=cx;pt.y=cy;return pt.matrixTransform(fieldEl.getScreenCTM().inverse());}
+
+function findNearestOtherFieldPlayer(cx,cy,excludeIdx){
+  var svg=document.getElementById("field"),rect=svg.getBoundingClientRect();
+  var best=-1,bestDist=45;
+  for(var i=0;i<players.length;i++){
+    if(i===excludeIdx)continue;
+    var px=players[i].x*rect.width+rect.left,py=players[i].y*rect.height+rect.top;
+    var d=Math.sqrt((cx-px)*(cx-px)+(cy-py)*(cy-py));
+    if(d<bestDist){best=i;bestDist=d;}
+  }
+  return best;
+}
+
 fieldEl.addEventListener("pointerdown",function(e){
   if(benchDragState)return;
   var g=e.target;while(g&&g!==fieldEl){if(g.getAttribute&&g.getAttribute("class")==="player-g")break;g=g.parentNode;}
   if(!g||g===fieldEl)return;
   e.preventDefault();
-  draggingFieldIdx=parseInt(g.getAttribute("data-idx"));
+  var idx=parseInt(g.getAttribute("data-idx"));
+  draggingFieldIdx=idx;
+  fieldDragState={idx:idx,startX:players[idx].x,startY:players[idx].y,swapTarget:-1};
   g.style.cursor="grabbing";g.setPointerCapture(e.pointerId);
 });
+
 fieldEl.addEventListener("pointermove",function(e){
-  if(draggingFieldIdx<0)return;e.preventDefault();
+  if(draggingFieldIdx<0||!fieldDragState)return;e.preventDefault();
   var pt=getSVGPoint(e.clientX,e.clientY);
   var nx=Math.max(PR,Math.min(FW-PR,pt.x))/FW,ny=Math.max(PR,Math.min(FH-PR,pt.y))/FH;
   players[draggingFieldIdx].x=nx;players[draggingFieldIdx].y=ny;
   var g=document.querySelector('.player-g[data-idx="'+draggingFieldIdx+'"]');
   if(g)g.setAttribute("transform","translate("+(nx*FW)+","+(ny*FH)+")");
-  debouncedSave();
+  // Check for swap target
+  var target=findNearestOtherFieldPlayer(e.clientX,e.clientY,draggingFieldIdx);
+  if(target!==fieldDragState.swapTarget){
+    fieldDragState.swapTarget=target;
+    drawPlayers();
+    // Re-move the dragged player visually on top (drawPlayers resets positions)
+    var g2=document.querySelector('.player-g[data-idx="'+draggingFieldIdx+'"]');
+    if(g2)g2.setAttribute("transform","translate("+(nx*FW)+","+(ny*FH)+")");
+  }
 });
-fieldEl.addEventListener("pointerup",function(){
-  if(draggingFieldIdx<0)return;
-  var g=document.querySelector('.player-g[data-idx="'+draggingFieldIdx+'"]');
-  if(g)g.style.cursor="grab";draggingFieldIdx=-1;
+
+fieldEl.addEventListener("pointerup",function(e){
+  if(draggingFieldIdx<0||!fieldDragState)return;
+  var idx=fieldDragState.idx;
+  var swapTarget=fieldDragState.swapTarget;
+  if(swapTarget>=0){
+    // Swap: move dragged player back to start, swap names
+    players[idx].x=fieldDragState.startX;
+    players[idx].y=fieldDragState.startY;
+    var tmpName=players[idx].name;
+    players[idx].name=players[swapTarget].name;
+    players[swapTarget].name=tmpName;
+  }
+  // Update roles based on final positions
+  updateRolesAndFormation();
+  fieldDragState=null;
+  draggingFieldIdx=-1;
+  drawAll();
+  saveState();
 });
-fieldEl.addEventListener("pointercancel",function(){draggingFieldIdx=-1;});
+
+fieldEl.addEventListener("pointercancel",function(){
+  if(fieldDragState){
+    // Revert position
+    players[fieldDragState.idx].x=fieldDragState.startX;
+    players[fieldDragState.idx].y=fieldDragState.startY;
+    fieldDragState=null;
+  }
+  draggingFieldIdx=-1;
+  drawAll();
+});
 
 // ── Export ──
 document.getElementById("exportBtn").addEventListener("click",function(){
