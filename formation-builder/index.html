@@ -7,91 +7,98 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Formation">
-<meta name="color-scheme" content="light dark">
 <title>Formation Builder</title>
-<!-- Google Fonts loaded as link tags (more reliable than @import in <style>) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet">
 <style>
-  /* ── Dark theme (default) ── */
-  :root {
-    --accent: #f0c040;
-    --bg: #111a0e;
-    --panel: #1a2216;
-    --panel-border: #3a4a34;
-    --field-border: #3a4a34;
-    --text: #e0d8c8;
-    --text-muted: #a89e88;
-    --btn-bg: #2a3a24;
-    --btn-text: #d4ccb4;
-    --btn-active: #f0c040;
-    --btn-active-text: #1a2216;
-    --input-placeholder: #908870;
-    --field-wrap-bg: #0d1a08;
-    --shadow-strong: rgba(0,0,0,0.5);
-    --shadow-med: rgba(0,0,0,0.3);
-    --bench-bg: #14200f;
-    --bench-slot-bg: #1e2e18;
-    --bench-slot-border: #3a4a34;
-    --swap-hl: rgba(240,192,64,0.25);
-    --export-bg: #2a3a24;
-    --export-text: #e0d8c8;
-    --export-hover: #3a5030;
-  }
-  /* ── Light theme ── */
-  @media (prefers-color-scheme: light) {
-    :root {
-      --accent: #2e7d32;
-      --bg: #f0ede6;
-      --panel: #ffffff;
-      --panel-border: #d0ccc0;
-      --field-border: #c0bca8;
-      --text: #2a2a20;
-      --text-muted: #6a6250;
-      --btn-bg: #e8e4d8;
-      --btn-text: #3a3828;
-      --btn-active: #2e7d32;
-      --btn-active-text: #ffffff;
-      --input-placeholder: #a09880;
-      --field-wrap-bg: #d8e8d0;
-      --shadow-strong: rgba(0,0,0,0.12);
-      --shadow-med: rgba(0,0,0,0.08);
-      --bench-bg: #e4e0d4;
-      --bench-slot-bg: #f5f2ea;
-      --bench-slot-border: #c8c4b8;
-      --swap-hl: rgba(46,125,50,0.18);
-      --export-bg: #2e7d32;
-      --export-text: #ffffff;
-      --export-hover: #388e3c;
-    }
-  }
+  /*
+    Safari fix: do NOT use <meta name="color-scheme"> as it can cause Safari
+    to override dark variables with its own light defaults. Instead, set
+    color-scheme via CSS only on elements that need it (like inputs).
+    Dark theme is the default; light is opt-in via media query.
+  */
 
-- { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root {
+–accent: #f0c040;
+–bg: #111a0e;
+–panel: #1a2216;
+–panel-border: #3a4a34;
+–field-border: #3a4a34;
+–text: #e0d8c8;
+–text-muted: #a89e88;
+–btn-bg: #2a3a24;
+–btn-text: #d4ccb4;
+–btn-active: #f0c040;
+–btn-active-text: #1a2216;
+–input-placeholder: #908870;
+–field-wrap-bg: #0d1a08;
+–bench-bg: #14200f;
+–bench-slot-bg: #1e2e18;
+–bench-slot-border: #3a4a34;
+–swap-hl: rgba(240,192,64,0.25);
+–export-bg: #2a3a24;
+–export-text: #e0d8c8;
+–export-hover: #3a5030;
+}
 
-html {
-overflow-x: hidden;
+@media (prefers-color-scheme: light) {
+:root {
+–accent: #2e7d32;
+–bg: #f0ede6;
+–panel: #ffffff;
+–panel-border: #d0ccc0;
+–field-border: #c0bca8;
+–text: #2a2a20;
+–text-muted: #6a6250;
+–btn-bg: #e8e4d8;
+–btn-text: #3a3828;
+–btn-active: #2e7d32;
+–btn-active-text: #ffffff;
+–input-placeholder: #a09880;
+–field-wrap-bg: #d8e8d0;
+–bench-bg: #e4e0d4;
+–bench-slot-bg: #f5f2ea;
+–bench-slot-border: #c8c4b8;
+–swap-hl: rgba(46,125,50,0.18);
+–export-bg: #2e7d32;
+–export-text: #ffffff;
+–export-hover: #388e3c;
+}
+}
+
+*, *::before, *::after {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+-webkit-tap-highlight-color: transparent;
+}
+
+html, body {
 width: 100%;
+max-width: 100%;
+overflow-x: hidden;
 }
 
 body {
+background-color: #111a0e;
 background-color: var(–bg);
 font-family: ‘DM Sans’, system-ui, -apple-system, ‘Segoe UI’, Roboto, Helvetica, Arial, sans-serif;
+color: #e0d8c8;
 color: var(–text);
 min-height: 100vh;
-width: 100%;
-max-width: 100vw;
-overflow-x: hidden;
+min-height: 100dvh;
 display: flex;
 flex-direction: column;
 align-items: center;
-padding: 20px 10px 40px;
+padding: 20px 12px 40px 12px;
 }
 
 h1 {
 font-family: ‘Instrument Serif’, Georgia, ‘Times New Roman’, serif;
 font-size: 26px;
 font-weight: 400;
+color: #f0c040;
 color: var(–accent);
 letter-spacing: 0.5px;
 margin-bottom: 2px;
@@ -99,130 +106,166 @@ margin-bottom: 2px;
 
 .subtitle {
 font-size: 12px;
+color: #a89e88;
 color: var(–text-muted);
 margin-bottom: 16px;
 text-align: center;
-max-width: 90vw;
 line-height: 1.4;
+padding: 0 8px;
 }
 
+/* ── Formation buttons ── */
 .formations {
 display: flex;
 flex-wrap: wrap;
 gap: 5px;
 justify-content: center;
 margin-bottom: 14px;
-max-width: 100%;
-padding: 0 4px;
+padding: 0 8px;
 }
 
 .formations button {
 padding: 5px 11px;
 border-radius: 6px;
-border: 1px solid var(–panel-border);
+border-width: 1px;
+border-style: solid;
+border-color: #3a4a34;
+border-color: var(–panel-border);
+background-color: #2a3a24;
 background-color: var(–btn-bg);
+color: #d4ccb4;
 color: var(–btn-text);
 font-family: ‘DM Sans’, system-ui, sans-serif;
 font-size: 13px;
 font-weight: 600;
 cursor: pointer;
-transition: all 0.15s;
 }
 
 .formations button.active {
+border-color: #f0c040;
 border-color: var(–accent);
+background-color: #f0c040;
 background-color: var(–btn-active);
+color: #1a2216;
 color: var(–btn-active-text);
 }
 
+/* ── Main layout ── */
 .main {
 display: flex;
+flex-direction: column;
+align-items: center;
 gap: 12px;
-flex-wrap: wrap;
-justify-content: center;
-align-items: flex-start;
 width: 100%;
 max-width: 100%;
-padding: 0 2px;
 }
 
+@media (min-width: 700px) {
+.main {
+flex-direction: row;
+align-items: flex-start;
+justify-content: center;
+max-width: 680px;
+}
+}
+
+/* ── Pitch column ── */
 .pitch-col {
 display: flex;
 flex-direction: column;
 gap: 10px;
 width: 100%;
 max-width: 400px;
-min-width: 0;
 }
 
+/* ── Field wrapper ── */
 .field-wrap {
+background-color: #0d1a08;
 background-color: var(–field-wrap-bg);
 border-radius: 12px;
 padding: 8px;
-box-shadow: 0 8px 32px var(–shadow-strong);
-border: 1px solid var(–field-border);
+border-width: 1px;
+border-style: solid;
+border-color: #3a4a34;
+border-color: var(–field-border);
 touch-action: none;
+-webkit-touch-callout: none;
 }
 
 .field-wrap svg {
 width: 100%;
+height: auto;
 display: block;
 border-radius: 8px;
 }
 
-/* Bench */
+/* ── Bench ── */
 .bench {
+background-color: #14200f;
 background-color: var(–bench-bg);
-border: 1px solid var(–panel-border);
+border-width: 1px;
+border-style: solid;
+border-color: #3a4a34;
+border-color: var(–panel-border);
 border-radius: 10px;
 padding: 10px 12px;
 touch-action: none;
+-webkit-touch-callout: none;
 }
 
 .bench-title {
 font-family: ‘Instrument Serif’, Georgia, serif;
 font-size: 14px;
 font-weight: 400;
+color: #f0c040;
 color: var(–accent);
 margin-bottom: 8px;
 }
 
 .bench-row {
 display: flex;
-gap: 8px;
+gap: 6px;
 flex-wrap: wrap;
 }
 
 .bench-slot {
-width: 62px;
-height: 72px;
+width: 58px;
+height: 70px;
 border-radius: 8px;
+background-color: #1e2e18;
 background-color: var(–bench-slot-bg);
-border: 2px dashed var(–bench-slot-border);
+border-width: 2px;
+border-style: dashed;
+border-color: #3a4a34;
+border-color: var(–bench-slot-border);
 display: flex;
 flex-direction: column;
 align-items: center;
 justify-content: center;
 cursor: grab;
-transition: all 0.15s;
 user-select: none;
+-webkit-user-select: none;
 touch-action: none;
+-webkit-touch-callout: none;
 }
 
 .bench-slot.dragging { opacity: 0.4; }
 
 .bench-slot.highlight {
+border-color: #f0c040;
 border-color: var(–accent);
+background-color: rgba(240,192,64,0.25);
 background-color: var(–swap-hl);
 border-style: solid;
 }
 
 .bench-slot .bench-name {
-font-size: 9px;
+font-size: 8px;
 font-weight: 600;
+color: #e0d8c8;
 color: var(–text);
 margin-top: 2px;
-max-width: 58px;
+max-width: 54px;
 overflow: hidden;
 text-overflow: ellipsis;
 white-space: nowrap;
@@ -230,10 +273,12 @@ text-align: center;
 }
 
 .bench-slot .bench-name.empty {
+color: #a89e88;
 color: var(–text-muted);
 font-style: italic;
 }
 
+/* ── Actions ── */
 .actions-row {
 display: flex;
 gap: 8px;
@@ -244,28 +289,32 @@ justify-content: center;
 padding: 8px 18px;
 border-radius: 8px;
 border: none;
+background-color: #2a3a24;
 background-color: var(–export-bg);
+color: #e0d8c8;
 color: var(–export-text);
 font-family: ‘DM Sans’, system-ui, sans-serif;
 font-size: 13px;
 font-weight: 600;
 cursor: pointer;
-transition: all 0.15s;
 }
 
-.action-btn:hover { background-color: var(–export-hover); }
-.action-btn:active { transform: scale(0.97); }
-
-/* Roster */
+/* ── Roster ── */
 .roster {
+background-color: #1a2216;
 background-color: var(–panel);
-border: 1px solid var(–panel-border);
+border-width: 1px;
+border-style: solid;
+border-color: #3a4a34;
+border-color: var(–panel-border);
 border-radius: 12px;
-padding: 14px 14px;
-box-shadow: 0 4px 20px var(–shadow-med);
+padding: 14px;
 width: 100%;
 max-width: 400px;
-min-width: 0;
+}
+
+@media (min-width: 700px) {
+.roster { max-width: 260px; }
 }
 
 .roster-header {
@@ -279,13 +328,15 @@ margin-bottom: 12px;
 font-family: ‘Instrument Serif’, Georgia, serif;
 font-size: 18px;
 font-weight: 400;
+color: #f0c040;
 color: var(–accent);
 }
 
 .roster-header button {
 font-size: 11px;
+color: #a89e88;
 color: var(–text-muted);
-background: none;
+background-color: transparent;
 border: none;
 cursor: pointer;
 font-family: ‘DM Sans’, system-ui, sans-serif;
@@ -296,6 +347,7 @@ text-underline-offset: 2px;
 .section-label {
 font-size: 10px;
 font-weight: 600;
+color: #a89e88;
 color: var(–text-muted);
 text-transform: uppercase;
 letter-spacing: 1px;
@@ -315,12 +367,15 @@ gap: 10px;
 padding: 6px 10px;
 border-radius: 6px;
 cursor: pointer;
-border: 1px solid transparent;
-transition: all 0.15s;
+border-width: 1px;
+border-style: solid;
+border-color: transparent;
 }
 
 .roster-row.editing {
+background-color: rgba(240,192,64,0.25);
 background-color: var(–swap-hl);
+border-color: #f0c040;
 border-color: var(–accent);
 }
 
@@ -329,27 +384,40 @@ border-color: var(–accent);
 .roster-row input {
 flex: 1;
 min-width: 0;
-background: transparent;
+background-color: transparent;
 border: none;
 outline: none;
+color: #e0d8c8;
 color: var(–text);
+color-scheme: dark;
 font-family: ‘DM Sans’, system-ui, sans-serif;
 font-size: 13px;
 font-weight: 500;
 padding: 0;
 }
 
-.roster-row input::placeholder { color: var(–input-placeholder); }
+@media (prefers-color-scheme: light) {
+.roster-row input { color-scheme: light; }
+}
+
+.roster-row input::placeholder {
+color: #908870;
+color: var(–input-placeholder);
+}
 
 .roster-name { font-size: 13px; font-weight: 500; }
-.roster-name.empty { color: var(–text-muted); font-style: italic; }
-.roster-name.filled { color: var(–text); }
+.roster-name.empty { color: #a89e88; color: var(–text-muted); font-style: italic; }
+.roster-name.filled { color: #e0d8c8; color: var(–text); }
 
 .roster-footer {
 margin-top: 14px;
 padding-top: 10px;
-border-top: 1px solid var(–panel-border);
+border-top-width: 1px;
+border-top-style: solid;
+border-top-color: #3a4a34;
+border-top-color: var(–panel-border);
 font-size: 11px;
+color: #a89e88;
 color: var(–text-muted);
 line-height: 1.5;
 }
@@ -357,9 +425,9 @@ line-height: 1.5;
 .save-badge {
 display: inline-block;
 font-size: 10px;
+color: #f0c040;
 color: var(–accent);
 opacity: 0;
-transition: opacity 0.3s;
 margin-left: 6px;
 }
 .save-badge.show { opacity: 1; }
@@ -374,20 +442,13 @@ opacity: 0.8;
 transform: translate(-50%, -50%);
 display: none;
 }
-
-/* Desktop: side-by-side */
-@media (min-width: 700px) {
-.main { max-width: 680px; }
-.pitch-col { max-width: 400px; flex: 1 1 380px; }
-.roster { max-width: 260px; flex: 1 1 220px; }
-}
 </style>
 
 </head>
 <body>
 
 <h1>Formation Builder</h1>
-<p class="subtitle">8v8 · Drag to reposition · Tap roster to rename · Drag bench onto field to swap <span id="saveBadge" class="save-badge">&#10003; Saved</span></p>
+<p class="subtitle">8v8 &middot; Drag to reposition &middot; Tap roster to rename &middot; Drag bench onto field to swap <span id="saveBadge" class="save-badge">&#10003; Saved</span></p>
 
 <div class="formations" id="formationBtns"></div>
 
@@ -417,14 +478,14 @@ display: none;
 <div class="swap-ghost" id="swapGhost"></div>
 
 <script>
-const FW=380,FH=560,PR=24;
-const JERSEY="M -6 -18 L -14 -14 L -22 -8 L -18 0 L -12 -4 L -12 18 Q -12 22 -8 22 L 8 22 Q 12 22 12 18 L 12 -4 L 18 0 L 22 -8 L 14 -14 L 6 -18 Q 3 -14 0 -14 Q -3 -14 -6 -18 Z";
-const COLLAR="M -6 -18 Q -3 -12 0 -12 Q 3 -12 6 -18";
-const NS="http://www.w3.org/2000/svg";
-const STORAGE_KEY="formation_builder_v3";
-const BENCH_COUNT=4;
+var FW=380,FH=560,PR=24;
+var JERSEY="M -6 -18 L -14 -14 L -22 -8 L -18 0 L -12 -4 L -12 18 Q -12 22 -8 22 L 8 22 Q 12 22 12 18 L 12 -4 L 18 0 L 22 -8 L 14 -14 L 6 -18 Q 3 -14 0 -14 Q -3 -14 -6 -18 Z";
+var COLLAR="M -6 -18 Q -3 -12 0 -12 Q 3 -12 6 -18";
+var NS="http://www.w3.org/2000/svg";
+var STORAGE_KEY="formation_builder_v4";
+var BENCH_COUNT=5;
 
-const FORMATIONS={
+var FORMATIONS={
   "3-3-1":[{x:.5,y:.92,role:"GK"},{x:.2,y:.75,role:"CB"},{x:.5,y:.72,role:"CB"},{x:.8,y:.75,role:"CB"},{x:.2,y:.48,role:"CM"},{x:.5,y:.45,role:"CM"},{x:.8,y:.48,role:"CM"},{x:.5,y:.22,role:"ST"}],
   "2-3-2":[{x:.5,y:.92,role:"GK"},{x:.3,y:.75,role:"CB"},{x:.7,y:.75,role:"CB"},{x:.2,y:.5,role:"LM"},{x:.5,y:.47,role:"CM"},{x:.8,y:.5,role:"RM"},{x:.35,y:.24,role:"ST"},{x:.65,y:.24,role:"ST"}],
   "3-2-2":[{x:.5,y:.92,role:"GK"},{x:.2,y:.75,role:"CB"},{x:.5,y:.72,role:"CB"},{x:.8,y:.75,role:"CB"},{x:.33,y:.48,role:"CM"},{x:.67,y:.48,role:"CM"},{x:.35,y:.24,role:"ST"},{x:.65,y:.24,role:"ST"}],
@@ -433,18 +494,16 @@ const FORMATIONS={
   "2-1-2-1-1":[{x:.5,y:.92,role:"GK"},{x:.3,y:.78,role:"CB"},{x:.7,y:.78,role:"CB"},{x:.5,y:.6,role:"CDM"},{x:.25,y:.44,role:"LM"},{x:.75,y:.44,role:"RM"},{x:.5,y:.3,role:"AM"},{x:.5,y:.16,role:"ST"}]
 };
 
-// ── State ──
-let currentFormation="3-3-1";
-let players=FORMATIONS["3-3-1"].map(p=>({...p,name:""}));
-let bench=Array.from({length:BENCH_COUNT},()=>({name:"",role:"SUB"}));
-let editingIdx=null;
-let draggingFieldIdx=-1;
-let benchDragState=null;
+var currentFormation="3-3-1";
+var players=FORMATIONS["3-3-1"].map(function(p){return{x:p.x,y:p.y,role:p.role,name:""};});
+var bench=[];for(var bi=0;bi<BENCH_COUNT;bi++)bench.push({name:"",role:"SUB"});
+var editingIdx=null;
+var draggingFieldIdx=-1;
+var benchDragState=null;
 
-// ── Theme ──
 function isDark(){return window.matchMedia("(prefers-color-scheme:dark)").matches;}
 function themeColors(){
-  const d=isDark();
+  var d=isDark();
   return{
     fieldBase:d?"#1a6b37":"#1e8040",fieldStripe:d?"#237d44":"#2a9850",
     playerFill:d?"#e8dcc8":"#ffffff",playerStroke:d?"#5a4a30":"#4a6a40",playerText:d?"#2d2418":"#1a3010",
@@ -453,191 +512,168 @@ function themeColors(){
   };
 }
 
-// ── Persistence ──
 function loadState(){
   try{
-    const s=JSON.parse(localStorage.getItem(STORAGE_KEY));if(!s)return;
+    var s=JSON.parse(localStorage.getItem(STORAGE_KEY));if(!s)return;
     if(s.formation&&FORMATIONS[s.formation])currentFormation=s.formation;
     if(Array.isArray(s.players)&&s.players.length===8)
-      players=s.players.map((p,i)=>({
+      players=s.players.map(function(p,i){return{
         x:typeof p.x==="number"?p.x:FORMATIONS[currentFormation][i].x,
         y:typeof p.y==="number"?p.y:FORMATIONS[currentFormation][i].y,
         role:p.role||FORMATIONS[currentFormation][i].role,name:p.name||""
-      }));
-    if(Array.isArray(s.bench))bench=s.bench.slice(0,BENCH_COUNT).map(b=>({name:b.name||"",role:"SUB"}));
+      };});
+    if(Array.isArray(s.bench)){bench=s.bench.slice(0,BENCH_COUNT).map(function(b){return{name:b.name||"",role:"SUB"};});}
     while(bench.length<BENCH_COUNT)bench.push({name:"",role:"SUB"});
   }catch(e){}
 }
 function saveState(){
   try{
-    localStorage.setItem(STORAGE_KEY,JSON.stringify({formation:currentFormation,players,bench}));
-    const b=document.getElementById("saveBadge");b.classList.add("show");
-    setTimeout(()=>b.classList.remove("show"),1200);
+    localStorage.setItem(STORAGE_KEY,JSON.stringify({formation:currentFormation,players:players,bench:bench}));
+    var b=document.getElementById("saveBadge");b.style.opacity="1";
+    setTimeout(function(){b.style.opacity="0";},1200);
   }catch(e){}
 }
-let saveTimer=null;
+var saveTimer=null;
 function debouncedSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveState,300);}
 
-// ── SVG helper ──
-function el(tag,attrs){const e=document.createElementNS(NS,tag);if(attrs)Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,String(v)));return e;}
+function el(tag,attrs){var e=document.createElementNS(NS,tag);if(attrs){var keys=Object.keys(attrs);for(var i=0;i<keys.length;i++)e.setAttribute(keys[i],String(attrs[keys[i]]));}return e;}
 
-// ── Draw field ──
 function drawField(){
-  const svg=document.getElementById("field");svg.innerHTML="";
-  const c=themeColors();
-  const defs=el("defs");
-  const pat=el("pattern",{id:"grass",patternUnits:"userSpaceOnUse",width:FW,height:80});
+  var svg=document.getElementById("field");svg.innerHTML="";
+  var c=themeColors();
+  var defs=el("defs");
+  var pat=el("pattern",{id:"grass",patternUnits:"userSpaceOnUse",width:FW,height:80});
   pat.appendChild(el("rect",{width:FW,height:80,fill:c.fieldBase}));
   pat.appendChild(el("rect",{x:0,y:0,width:FW,height:40,fill:c.fieldStripe,opacity:.3}));
   defs.appendChild(pat);
-  const flt=el("filter",{id:"nshadow",x:"-50%",y:"-50%",width:"200%",height:"200%"});
-  const feG=el("feGaussianBlur",{"in":"SourceAlpha",stdDeviation:2,result:"blur"});flt.appendChild(feG);
-  const feO=el("feOffset",{"in":"blur",dx:0,dy:1,result:"offblur"});flt.appendChild(feO);
-  const feF=el("feFlood",{"flood-color":"#000","flood-opacity":.6,result:"color"});flt.appendChild(feF);
-  const feC=el("feComposite",{in:"color",in2:"offblur",operator:"in",result:"shadow"});flt.appendChild(feC);
-  const feM=el("feMerge");feM.appendChild(el("feMergeNode",{"in":"shadow"}));feM.appendChild(el("feMergeNode",{"in":"SourceGraphic"}));flt.appendChild(feM);
+  var flt=el("filter",{id:"nshadow",x:"-50%",y:"-50%",width:"200%",height:"200%"});
+  flt.appendChild(el("feGaussianBlur",{"in":"SourceAlpha",stdDeviation:"2",result:"blur"}));
+  flt.appendChild(el("feOffset",{"in":"blur",dx:"0",dy:"1",result:"offblur"}));
+  flt.appendChild(el("feFlood",{"flood-color":"#000","flood-opacity":"0.6",result:"color"}));
+  flt.appendChild(el("feComposite",{"in":"color",in2:"offblur",operator:"in",result:"shadow"}));
+  var feM=el("feMerge");feM.appendChild(el("feMergeNode",{"in":"shadow"}));feM.appendChild(el("feMergeNode",{"in":"SourceGraphic"}));flt.appendChild(feM);
   defs.appendChild(flt);
   svg.appendChild(defs);
   svg.appendChild(el("rect",{width:FW,height:FH,fill:"url(#grass)"}));
-  const L="rgba(255,255,255,0.5)";
-  svg.appendChild(el("rect",{x:20,y:20,width:FW-40,height:FH-40,fill:"none",stroke:L,"stroke-width":1.5}));
-  svg.appendChild(el("line",{x1:20,y1:FH/2,x2:FW-20,y2:FH/2,stroke:L,"stroke-width":1.5}));
-  svg.appendChild(el("circle",{cx:FW/2,cy:FH/2,r:45,fill:"none",stroke:L,"stroke-width":1.5}));
+  var L="rgba(255,255,255,0.5)";
+  svg.appendChild(el("rect",{x:20,y:20,width:FW-40,height:FH-40,fill:"none",stroke:L,"stroke-width":"1.5"}));
+  svg.appendChild(el("line",{x1:20,y1:FH/2,x2:FW-20,y2:FH/2,stroke:L,"stroke-width":"1.5"}));
+  svg.appendChild(el("circle",{cx:FW/2,cy:FH/2,r:45,fill:"none",stroke:L,"stroke-width":"1.5"}));
   svg.appendChild(el("circle",{cx:FW/2,cy:FH/2,r:3,fill:L}));
-  svg.appendChild(el("rect",{x:(FW-180)/2,y:FH-110,width:180,height:90,fill:"none",stroke:L,"stroke-width":1.5}));
-  svg.appendChild(el("rect",{x:(FW-90)/2,y:FH-56,width:90,height:36,fill:"none",stroke:L,"stroke-width":1.5}));
+  svg.appendChild(el("rect",{x:(FW-180)/2,y:FH-110,width:180,height:90,fill:"none",stroke:L,"stroke-width":"1.5"}));
+  svg.appendChild(el("rect",{x:(FW-90)/2,y:FH-56,width:90,height:36,fill:"none",stroke:L,"stroke-width":"1.5"}));
   svg.appendChild(el("circle",{cx:FW/2,cy:FH-80,r:2.5,fill:L}));
-  svg.appendChild(el("path",{d:`M ${FW/2-38} ${FH-110} A 45 45 0 0 1 ${FW/2+38} ${FH-110}`,fill:"none",stroke:L,"stroke-width":1.5}));
-  svg.appendChild(el("rect",{x:(FW-180)/2,y:20,width:180,height:90,fill:"none",stroke:L,"stroke-width":1.5}));
-  svg.appendChild(el("rect",{x:(FW-90)/2,y:20,width:90,height:36,fill:"none",stroke:L,"stroke-width":1.5}));
+  svg.appendChild(el("path",{d:"M "+(FW/2-38)+" "+(FH-110)+" A 45 45 0 0 1 "+(FW/2+38)+" "+(FH-110),fill:"none",stroke:L,"stroke-width":"1.5"}));
+  svg.appendChild(el("rect",{x:(FW-180)/2,y:20,width:180,height:90,fill:"none",stroke:L,"stroke-width":"1.5"}));
+  svg.appendChild(el("rect",{x:(FW-90)/2,y:20,width:90,height:36,fill:"none",stroke:L,"stroke-width":"1.5"}));
   svg.appendChild(el("circle",{cx:FW/2,cy:80,r:2.5,fill:L}));
-  svg.appendChild(el("path",{d:`M ${FW/2-38} 110 A 45 45 0 0 0 ${FW/2+38} 110`,fill:"none",stroke:L,"stroke-width":1.5}));
-  svg.appendChild(el("path",{d:"M 20 28 A 8 8 0 0 0 28 20",fill:"none",stroke:L,"stroke-width":1.5}));
-  svg.appendChild(el("path",{d:`M ${FW-20} 28 A 8 8 0 0 1 ${FW-28} 20`,fill:"none",stroke:L,"stroke-width":1.5}));
-  svg.appendChild(el("path",{d:`M 20 ${FH-28} A 8 8 0 0 1 28 ${FH-20}`,fill:"none",stroke:L,"stroke-width":1.5}));
-  svg.appendChild(el("path",{d:`M ${FW-20} ${FH-28} A 8 8 0 0 0 ${FW-28} ${FH-20}`,fill:"none",stroke:L,"stroke-width":1.5}));
+  svg.appendChild(el("path",{d:"M "+(FW/2-38)+" 110 A 45 45 0 0 0 "+(FW/2+38)+" 110",fill:"none",stroke:L,"stroke-width":"1.5"}));
+  svg.appendChild(el("path",{d:"M 20 28 A 8 8 0 0 0 28 20",fill:"none",stroke:L,"stroke-width":"1.5"}));
+  svg.appendChild(el("path",{d:"M "+(FW-20)+" 28 A 8 8 0 0 1 "+(FW-28)+" 20",fill:"none",stroke:L,"stroke-width":"1.5"}));
+  svg.appendChild(el("path",{d:"M 20 "+(FH-28)+" A 8 8 0 0 1 28 "+(FH-20),fill:"none",stroke:L,"stroke-width":"1.5"}));
+  svg.appendChild(el("path",{d:"M "+(FW-20)+" "+(FH-28)+" A 8 8 0 0 0 "+(FW-28)+" "+(FH-20),fill:"none",stroke:L,"stroke-width":"1.5"}));
 }
 
-// ── Draw players ──
 function drawPlayers(){
-  document.querySelectorAll(".player-g").forEach(e=>e.remove());
-  const svg=document.getElementById("field"),c=themeColors();
-  const highlightIdx=benchDragState&&benchDragState.active?benchDragState.targetFieldIdx:-1;
-  players.forEach((p,i)=>{
-    const px=p.x*FW,py=p.y*FH,isGK=p.role==="GK";
-    const fill=isGK?c.gkFill:c.playerFill,stroke=isGK?c.gkStroke:c.playerStroke;
-    const g=el("g",{transform:`translate(${px},${py})`,"data-idx":i,class:"player-g"});
+  var old=document.querySelectorAll(".player-g");for(var o=0;o<old.length;o++)old[o].remove();
+  var svg=document.getElementById("field"),c=themeColors();
+  var hlIdx=benchDragState&&benchDragState.active?benchDragState.targetFieldIdx:-1;
+  for(var i=0;i<players.length;i++){
+    var p=players[i],px=p.x*FW,py=p.y*FH,isGK=p.role==="GK";
+    var fill=isGK?c.gkFill:c.playerFill,stroke=isGK?c.gkStroke:c.playerStroke;
+    var g=el("g",{transform:"translate("+px+","+py+")","data-idx":i,"class":"player-g"});
     g.style.cursor="grab";
-    if(highlightIdx===i){
-      g.appendChild(el("circle",{r:30,fill:"none",stroke:"#f0c040","stroke-width":3,opacity:.8}));
-    }
-    g.appendChild(el("path",{d:JERSEY,fill,stroke,"stroke-width":1.8,"stroke-linejoin":"round"}));
-    g.appendChild(el("path",{d:COLLAR,fill:"none",stroke,"stroke-width":1,opacity:.4}));
-    const rt=el("text",{y:6,"text-anchor":"middle","dominant-baseline":"central",fill:c.playerText});
+    if(hlIdx===i)g.appendChild(el("circle",{r:30,fill:"none",stroke:"#f0c040","stroke-width":"3",opacity:"0.8"}));
+    g.appendChild(el("path",{d:JERSEY,fill:fill,stroke:stroke,"stroke-width":"1.8","stroke-linejoin":"round"}));
+    g.appendChild(el("path",{d:COLLAR,fill:"none",stroke:stroke,"stroke-width":"1",opacity:"0.4"}));
+    var rt=el("text",{y:"6","text-anchor":"middle","dominant-baseline":"central",fill:c.playerText});
     rt.style.cssText="font:700 11px 'DM Sans',system-ui,sans-serif;pointer-events:none;user-select:none;";
     rt.textContent=p.role;g.appendChild(rt);
     if(p.name){
-      const nm=p.name.length>8?p.name.slice(0,7)+"\u2026":p.name;
-      const nt=el("text",{y:35,"text-anchor":"middle","dominant-baseline":"central",fill:"#fff",filter:"url(#nshadow)"});
+      var nm=p.name.length>8?p.name.slice(0,7)+"\u2026":p.name;
+      var nt=el("text",{y:"35","text-anchor":"middle","dominant-baseline":"central",fill:"#fff",filter:"url(#nshadow)"});
       nt.style.cssText="font:600 10px 'DM Sans',system-ui,sans-serif;pointer-events:none;user-select:none;";
       nt.textContent=nm;g.appendChild(nt);
     }
     g.appendChild(el("circle",{r:28,fill:"transparent"}));
     svg.appendChild(g);
-  });
+  }
 }
 
-// ── Draw bench ──
 function drawBench(){
-  const row=document.getElementById("benchRow");row.innerHTML="";
-  const c=themeColors();
-  const dragActive=benchDragState&&benchDragState.active;
-  bench.forEach((b,i)=>{
-    const slot=document.createElement("div");
+  var row=document.getElementById("benchRow");row.innerHTML="";
+  var c=themeColors();
+  var dragActive=benchDragState&&benchDragState.active;
+  for(var i=0;i<bench.length;i++){
+    var b=bench[i];
+    var slot=document.createElement("div");
     slot.className="bench-slot";
-    if(dragActive&&benchDragState.benchIdx===i)slot.classList.add("dragging");
-    slot.dataset.benchIdx=i;
-    slot.innerHTML=`<svg width="32" height="32" viewBox="-24 -20 48 44" xmlns="${NS}">
-      <path d="${JERSEY}" fill="${c.benchFill}" stroke="${c.benchStroke}" stroke-width="1.5" stroke-linejoin="round"/>
-      <text y="8" text-anchor="middle" dominant-baseline="central" fill="${c.benchText}" style="font:700 10px 'DM Sans',system-ui,sans-serif">SUB</text>
-    </svg>`;
-    const nameEl=document.createElement("div");
+    if(dragActive&&benchDragState.benchIdx===i)slot.className+=" dragging";
+    slot.setAttribute("data-bench-idx",i);
+    slot.innerHTML='<svg width="30" height="30" viewBox="-24 -20 48 44" xmlns="'+NS+'">'+
+      '<path d="'+JERSEY+'" fill="'+c.benchFill+'" stroke="'+c.benchStroke+'" stroke-width="1.5" stroke-linejoin="round"/>'+
+      '<text y="8" text-anchor="middle" dominant-baseline="central" fill="'+c.benchText+'" style="font:700 9px \'DM Sans\',system-ui,sans-serif">SUB</text></svg>';
+    var nameEl=document.createElement("div");
     nameEl.className="bench-name"+(b.name?"":" empty");
     nameEl.textContent=b.name||"Sub "+(i+1);
     slot.appendChild(nameEl);
     row.appendChild(slot);
-  });
+  }
 }
 
-// ── Bench drag-to-swap ──
-const ghost=document.getElementById("swapGhost");
+// ── Bench drag ──
+var ghost=document.getElementById("swapGhost");
+var benchRowEl=document.getElementById("benchRow");
 
-document.getElementById("benchRow").addEventListener("pointerdown",function(e){
-  const slot=e.target.closest(".bench-slot");
+benchRowEl.addEventListener("pointerdown",function(e){
+  var slot=e.target.closest?e.target.closest(".bench-slot"):null;
+  if(!slot){var t=e.target;while(t&&t!==this){if(t.className&&t.className.indexOf&&t.className.indexOf("bench-slot")>=0){slot=t;break;}t=t.parentNode;}}
   if(!slot)return;
-  e.preventDefault();
-  e.stopPropagation();
-  const idx=parseInt(slot.dataset.benchIdx);
+  e.preventDefault();e.stopPropagation();
+  var idx=parseInt(slot.getAttribute("data-bench-idx"));
   benchDragState={benchIdx:idx,active:false,startX:e.clientX,startY:e.clientY,targetFieldIdx:-1};
-  // Capture on the bench row so we get all subsequent events
   this.setPointerCapture(e.pointerId);
 },false);
 
-document.getElementById("benchRow").addEventListener("pointermove",function(e){
+benchRowEl.addEventListener("pointermove",function(e){
   if(!benchDragState)return;
-  e.preventDefault();
-  e.stopPropagation();
+  e.preventDefault();e.stopPropagation();
   if(!benchDragState.active){
-    const dx=e.clientX-benchDragState.startX,dy=e.clientY-benchDragState.startY;
+    var dx=e.clientX-benchDragState.startX,dy=e.clientY-benchDragState.startY;
     if(Math.abs(dx)<6&&Math.abs(dy)<6)return;
     benchDragState.active=true;
-    const c=themeColors();
-    ghost.innerHTML=`<svg width="50" height="50" viewBox="-26 -22 52 48" xmlns="${NS}"><path d="${JERSEY}" fill="${c.benchFill}" stroke="${c.benchStroke}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+    var c=themeColors();
+    ghost.innerHTML='<svg width="50" height="50" viewBox="-26 -22 52 48" xmlns="'+NS+'"><path d="'+JERSEY+'" fill="'+c.benchFill+'" stroke="'+c.benchStroke+'" stroke-width="1.5" stroke-linejoin="round"/></svg>';
     ghost.style.display="block";
     drawBench();
   }
-  ghost.style.left=e.clientX+"px";
-  ghost.style.top=e.clientY+"px";
-  const target=findNearestFieldPlayer(e.clientX,e.clientY);
-  if(target!==benchDragState.targetFieldIdx){
-    benchDragState.targetFieldIdx=target;
-    drawPlayers();
-  }
+  ghost.style.left=e.clientX+"px";ghost.style.top=e.clientY+"px";
+  var target=findNearestFieldPlayer(e.clientX,e.clientY);
+  if(target!==benchDragState.targetFieldIdx){benchDragState.targetFieldIdx=target;drawPlayers();}
 },false);
 
-document.getElementById("benchRow").addEventListener("pointerup",function(e){
+benchRowEl.addEventListener("pointerup",function(e){
   if(!benchDragState)return;
   e.preventDefault();
   ghost.style.display="none";
   if(benchDragState.active&&benchDragState.targetFieldIdx>=0){
-    const fi=benchDragState.targetFieldIdx,bi=benchDragState.benchIdx;
-    const tmp=players[fi].name;
-    players[fi].name=bench[bi].name;
-    bench[bi].name=tmp;
+    var fi=benchDragState.targetFieldIdx,bii=benchDragState.benchIdx;
+    var tmp=players[fi].name;players[fi].name=bench[bii].name;bench[bii].name=tmp;
     saveState();
-  } else if(!benchDragState.active){
-    // Was a tap, not a drag — open editor
-    editingIdx="b"+benchDragState.benchIdx;
-  }
-  benchDragState=null;
-  drawAll();
+  }else if(!benchDragState.active){editingIdx="b"+benchDragState.benchIdx;}
+  benchDragState=null;drawAll();
 },false);
 
-document.getElementById("benchRow").addEventListener("pointercancel",function(){
-  if(!benchDragState)return;
-  ghost.style.display="none";
-  benchDragState=null;
-  drawAll();
+benchRowEl.addEventListener("pointercancel",function(){
+  if(!benchDragState)return;ghost.style.display="none";benchDragState=null;drawAll();
 },false);
 
 function findNearestFieldPlayer(cx,cy){
-  const svg=document.getElementById("field");
-  const rect=svg.getBoundingClientRect();
-  let best=-1,bestDist=50;
-  for(let i=0;i<players.length;i++){
-    const px=players[i].x*rect.width+rect.left;
-    const py=players[i].y*rect.height+rect.top;
-    const d=Math.hypot(cx-px,cy-py);
+  var svg=document.getElementById("field"),rect=svg.getBoundingClientRect();
+  var best=-1,bestDist=50;
+  for(var i=0;i<players.length;i++){
+    var px=players[i].x*rect.width+rect.left,py=players[i].y*rect.height+rect.top;
+    var d=Math.sqrt((cx-px)*(cx-px)+(cy-py)*(cy-py));
     if(d<bestDist){best=i;bestDist=d;}
   }
   return best;
@@ -645,163 +681,151 @@ function findNearestFieldPlayer(cx,cy){
 
 // ── Roster ──
 function drawRoster(){
-  const cont=document.getElementById("rosterContent");cont.innerHTML="";
-  const c=themeColors();
-  addRosterSection(cont,"On Field",players.map((p,i)=>({...p,id:"f"+i,idx:i,type:"field"})),c);
-  addRosterSection(cont,"Bench",bench.map((b,i)=>({...b,id:"b"+i,idx:i,type:"bench"})),c);
+  var cont=document.getElementById("rosterContent");cont.innerHTML="";
+  var c=themeColors();
+  addSection(cont,"On Field",players,"field",c);
+  addSection(cont,"Bench",bench,"bench",c);
 }
-
-function addRosterSection(cont,label,items,c){
-  const lbl=document.createElement("div");lbl.className="section-label";lbl.textContent=label;cont.appendChild(lbl);
-  const list=document.createElement("div");list.className="roster-list";cont.appendChild(list);
-  items.forEach(item=>{
-    const row=document.createElement("div");
-    const isEditing=editingIdx===item.id;
+function addSection(cont,label,items,type,c){
+  var lbl=document.createElement("div");lbl.className="section-label";lbl.textContent=label;cont.appendChild(lbl);
+  var list=document.createElement("div");list.className="roster-list";cont.appendChild(list);
+  for(var i=0;i<items.length;i++){(function(i){
+    var item=items[i],isField=type==="field",eid=(isField?"f":"b")+i;
+    var row=document.createElement("div");
+    var isEditing=editingIdx===eid;
     row.className="roster-row"+(isEditing?" editing":"");
-    const isField=item.type==="field";
-    const isGK=isField&&item.role==="GK";
-    let fill,stroke,textFill,roleLabel;
-    if(isField){fill=isGK?c.gkFill:c.playerFill;stroke=isGK?c.gkStroke:c.playerStroke;textFill=c.playerText;roleLabel=item.role;}
-    else{fill=c.benchFill;stroke=c.benchStroke;textFill=c.benchText;roleLabel="SUB";}
-    row.innerHTML=`<svg width="24" height="24" viewBox="-24 -20 48 44" xmlns="${NS}"><path d="${JERSEY}" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round"/><text y="8" text-anchor="middle" dominant-baseline="central" fill="${textFill}" style="font:700 10px 'DM Sans',system-ui,sans-serif">${roleLabel}</text></svg>`;
+    var isGK=isField&&item.role==="GK";
+    var fill,stroke,tf,rl;
+    if(isField){fill=isGK?c.gkFill:c.playerFill;stroke=isGK?c.gkStroke:c.playerStroke;tf=c.playerText;rl=item.role;}
+    else{fill=c.benchFill;stroke=c.benchStroke;tf=c.benchText;rl="SUB";}
+    row.innerHTML='<svg width="24" height="24" viewBox="-24 -20 48 44" xmlns="'+NS+'"><path d="'+JERSEY+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.5" stroke-linejoin="round"/><text y="8" text-anchor="middle" dominant-baseline="central" fill="'+tf+'" style="font:700 10px \'DM Sans\',system-ui,sans-serif">'+rl+'</text></svg>';
     if(isEditing){
-      const inp=document.createElement("input");inp.value=item.name;inp.placeholder=isField?"Player name":"Sub name";inp.maxLength=14;
-      const commit=()=>{
-        if(isField)players[item.idx].name=inp.value.trim();else bench[item.idx].name=inp.value.trim();
+      var inp=document.createElement("input");inp.type="text";inp.value=item.name;inp.placeholder=isField?"Player name":"Sub name";inp.maxLength=14;
+      var commit=function(){
+        if(isField)players[i].name=inp.value.trim();else bench[i].name=inp.value.trim();
         editingIdx=null;drawAll();saveState();
       };
       inp.addEventListener("blur",commit);
-      inp.addEventListener("keydown",(e)=>{if(e.key==="Enter")commit();if(e.key==="Escape"){editingIdx=null;drawAll();}});
-      row.appendChild(inp);requestAnimationFrame(()=>{inp.focus();inp.select();});
+      inp.addEventListener("keydown",function(e){if(e.key==="Enter")commit();if(e.key==="Escape"){editingIdx=null;drawAll();}});
+      row.appendChild(inp);
+      setTimeout(function(){inp.focus();inp.select();},50);
     }else{
-      const span=document.createElement("span");span.className="roster-name "+(item.name?"filled":"empty");
+      var span=document.createElement("span");span.className="roster-name "+(item.name?"filled":"empty");
       span.textContent=item.name||"Tap to name\u2026";row.appendChild(span);
-      row.addEventListener("click",()=>{editingIdx=item.id;drawAll();});
+      row.addEventListener("click",function(){editingIdx=eid;drawAll();});
     }
     list.appendChild(row);
-  });
+  })(i);}
 }
-
 function drawAll(){drawPlayers();drawBench();drawRoster();}
 
 // ── Formation buttons ──
 function drawFormationBtns(){
-  const wrap=document.getElementById("formationBtns");wrap.innerHTML="";
-  Object.keys(FORMATIONS).forEach(key=>{
-    const btn=document.createElement("button");btn.textContent=key;
+  var wrap=document.getElementById("formationBtns");wrap.innerHTML="";
+  var keys=Object.keys(FORMATIONS);
+  for(var k=0;k<keys.length;k++){(function(key){
+    var btn=document.createElement("button");btn.textContent=key;
     btn.className=key===currentFormation?"active":"";
-    btn.addEventListener("click",()=>{
+    btn.addEventListener("click",function(){
       currentFormation=key;
-      const names=players.map(p=>p.name);
-      players=FORMATIONS[key].map((p,i)=>({...p,name:names[i]||""}));
+      var names=players.map(function(p){return p.name;});
+      players=FORMATIONS[key].map(function(p,i){return{x:p.x,y:p.y,role:p.role,name:names[i]||""};});
       editingIdx=null;drawFormationBtns();drawAll();saveState();
     });
     wrap.appendChild(btn);
-  });
+  })(keys[k]);}
 }
 
-// ── Field player drag ──
-function getSVGPoint(cx,cy){const svg=document.getElementById("field"),pt=svg.createSVGPoint();pt.x=cx;pt.y=cy;return pt.matrixTransform(svg.getScreenCTM().inverse());}
-
-const fieldEl=document.getElementById("field");
-fieldEl.addEventListener("pointerdown",(e)=>{
+// ── Field drag ──
+var fieldEl=document.getElementById("field");
+function getSVGPoint(cx,cy){var pt=fieldEl.createSVGPoint();pt.x=cx;pt.y=cy;return pt.matrixTransform(fieldEl.getScreenCTM().inverse());}
+fieldEl.addEventListener("pointerdown",function(e){
   if(benchDragState)return;
-  const g=e.target.closest(".player-g");if(!g)return;
+  var g=e.target;while(g&&g!==fieldEl){if(g.getAttribute&&g.getAttribute("class")==="player-g")break;g=g.parentNode;}
+  if(!g||g===fieldEl)return;
   e.preventDefault();
-  draggingFieldIdx=parseInt(g.dataset.idx);
+  draggingFieldIdx=parseInt(g.getAttribute("data-idx"));
   g.style.cursor="grabbing";g.setPointerCapture(e.pointerId);
 });
-fieldEl.addEventListener("pointermove",(e)=>{
+fieldEl.addEventListener("pointermove",function(e){
   if(draggingFieldIdx<0)return;e.preventDefault();
-  const pt=getSVGPoint(e.clientX,e.clientY);
-  const nx=Math.max(PR,Math.min(FW-PR,pt.x))/FW,ny=Math.max(PR,Math.min(FH-PR,pt.y))/FH;
+  var pt=getSVGPoint(e.clientX,e.clientY);
+  var nx=Math.max(PR,Math.min(FW-PR,pt.x))/FW,ny=Math.max(PR,Math.min(FH-PR,pt.y))/FH;
   players[draggingFieldIdx].x=nx;players[draggingFieldIdx].y=ny;
-  const g=document.querySelector(`.player-g[data-idx="${draggingFieldIdx}"]`);
-  if(g)g.setAttribute("transform",`translate(${nx*FW},${ny*FH})`);
+  var g=document.querySelector('.player-g[data-idx="'+draggingFieldIdx+'"]');
+  if(g)g.setAttribute("transform","translate("+(nx*FW)+","+(ny*FH)+")");
   debouncedSave();
 });
-fieldEl.addEventListener("pointerup",()=>{
+fieldEl.addEventListener("pointerup",function(){
   if(draggingFieldIdx<0)return;
-  const g=document.querySelector(`.player-g[data-idx="${draggingFieldIdx}"]`);
+  var g=document.querySelector('.player-g[data-idx="'+draggingFieldIdx+'"]');
   if(g)g.style.cursor="grab";draggingFieldIdx=-1;
 });
-fieldEl.addEventListener("pointercancel",()=>{draggingFieldIdx=-1;});
+fieldEl.addEventListener("pointercancel",function(){draggingFieldIdx=-1;});
 
 // ── Export ──
-document.getElementById("exportBtn").addEventListener("click",async()=>{
-  const btn=document.getElementById("exportBtn");
+document.getElementById("exportBtn").addEventListener("click",function(){
+  var btn=document.getElementById("exportBtn");
   btn.textContent="Generating\u2026";btn.disabled=true;
   try{
-    const benchH=90,pad=20,totalH=FH+pad+benchH;
-    const c=themeColors();
-    const xsvg=el("svg",{xmlns:NS,width:FW*2,height:totalH*2,viewBox:`0 0 ${FW} ${totalH}`});
-    // Background
+    var benchH=95,pad=20,totalH=FH+pad+benchH;
+    var c=themeColors();
+    var xsvg=el("svg",{xmlns:NS,width:FW*2,height:totalH*2,viewBox:"0 0 "+FW+" "+totalH});
     xsvg.appendChild(el("rect",{width:FW,height:totalH,fill:isDark()?"#111a0e":"#f0ede6"}));
-    // Clone field children into a group
-    const fieldSvg=document.getElementById("field");
-    const fieldG=el("g");
-    Array.from(fieldSvg.childNodes).forEach(n=>fieldG.appendChild(n.cloneNode(true)));
-    xsvg.appendChild(fieldG);
-    // Bench below
-    const by=FH+pad;
+    var fsvg=document.getElementById("field"),fG=el("g");
+    var nodes=fsvg.childNodes;for(var n=0;n<nodes.length;n++)fG.appendChild(nodes[n].cloneNode(true));
+    xsvg.appendChild(fG);
+    var by=FH+pad;
     xsvg.appendChild(el("rect",{x:8,y:by-5,width:FW-16,height:benchH,rx:8,fill:isDark()?"#14200f":"#e4e0d4"}));
-    const bLabel=el("text",{x:18,y:by+14,fill:isDark()?"#f0c040":"#2e7d32"});
-    bLabel.style.cssText="font:600 12px 'DM Sans',system-ui,sans-serif;";
-    bLabel.textContent="Bench";xsvg.appendChild(bLabel);
-    bench.forEach((b,i)=>{
-      const bx=30+i*85,bpy=by+52;
-      const bg=el("g",{transform:`translate(${bx},${bpy}) scale(0.65)`});
-      bg.appendChild(el("path",{d:JERSEY,fill:c.benchFill,stroke:c.benchStroke,"stroke-width":2,"stroke-linejoin":"round"}));
-      const rt=el("text",{y:6,"text-anchor":"middle","dominant-baseline":"central",fill:c.benchText});
-      rt.style.cssText="font:700 11px 'DM Sans',system-ui,sans-serif;";
-      rt.textContent="SUB";bg.appendChild(rt);xsvg.appendChild(bg);
-      const nm=b.name||(""+(i+1));
-      const nt=el("text",{x:bx,y:bpy+22,"text-anchor":"middle","dominant-baseline":"central",fill:isDark()?"#e0d8c8":"#2a2a20"});
-      nt.style.cssText="font:600 10px 'DM Sans',system-ui,sans-serif;";
-      nt.textContent=nm.length>8?nm.slice(0,7)+"\u2026":nm;xsvg.appendChild(nt);
-    });
-    const fl=el("text",{x:FW-18,y:by+14,"text-anchor":"end",fill:isDark()?"#a89e88":"#6a6250"});
-    fl.style.cssText="font:600 11px 'DM Sans',system-ui,sans-serif;";
-    fl.textContent=currentFormation;xsvg.appendChild(fl);
-
-    const svgStr=new XMLSerializer().serializeToString(xsvg);
-    const svgBlob=new Blob([svgStr],{type:"image/svg+xml;charset=utf-8"});
-    const url=URL.createObjectURL(svgBlob);
-    const img=new Image();
-    img.onload=()=>{
-      const canvas=document.createElement("canvas");
-      canvas.width=FW*2;canvas.height=totalH*2;
-      const ctx=canvas.getContext("2d");
-      ctx.drawImage(img,0,0,FW*2,totalH*2);
+    var bL=el("text",{x:18,y:by+14,fill:isDark()?"#f0c040":"#2e7d32"});
+    bL.style.cssText="font:600 12px 'DM Sans',system-ui,sans-serif;";bL.textContent="Bench";xsvg.appendChild(bL);
+    for(var i=0;i<bench.length;i++){
+      var bx=22+i*70,bpy=by+55;
+      var bg=el("g",{transform:"translate("+bx+","+bpy+") scale(0.6)"});
+      bg.appendChild(el("path",{d:JERSEY,fill:c.benchFill,stroke:c.benchStroke,"stroke-width":"2","stroke-linejoin":"round"}));
+      var brt=el("text",{y:"6","text-anchor":"middle","dominant-baseline":"central",fill:c.benchText});
+      brt.style.cssText="font:700 11px 'DM Sans',system-ui,sans-serif;";brt.textContent="SUB";bg.appendChild(brt);xsvg.appendChild(bg);
+      var bnm=bench[i].name||""+(i+1);
+      var bnt=el("text",{x:bx,y:bpy+22,"text-anchor":"middle","dominant-baseline":"central",fill:isDark()?"#e0d8c8":"#2a2a20"});
+      bnt.style.cssText="font:600 10px 'DM Sans',system-ui,sans-serif;";
+      bnt.textContent=bnm.length>8?bnm.slice(0,7)+"\u2026":bnm;xsvg.appendChild(bnt);
+    }
+    var fl=el("text",{x:FW-18,y:by+14,"text-anchor":"end",fill:isDark()?"#a89e88":"#6a6250"});
+    fl.style.cssText="font:600 11px 'DM Sans',system-ui,sans-serif;";fl.textContent=currentFormation;xsvg.appendChild(fl);
+    var svgStr=new XMLSerializer().serializeToString(xsvg);
+    var svgBlob=new Blob([svgStr],{type:"image/svg+xml;charset=utf-8"});
+    var url=URL.createObjectURL(svgBlob);
+    var img=new Image();
+    img.onload=function(){
+      var canvas=document.createElement("canvas");canvas.width=FW*2;canvas.height=totalH*2;
+      var ctx=canvas.getContext("2d");ctx.drawImage(img,0,0,FW*2,totalH*2);
       URL.revokeObjectURL(url);
-      canvas.toBlob((blob)=>{
-        const file=new File([blob],"formation.png",{type:"image/png"});
+      canvas.toBlob(function(blob){
+        var file=new File([blob],"formation.png",{type:"image/png"});
         if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
-          navigator.share({files:[file],title:"Formation \u2013 "+currentFormation}).catch(()=>downloadBlob(blob));
+          navigator.share({files:[file],title:"Formation \u2013 "+currentFormation}).catch(function(){downloadBlob(blob);});
         }else{downloadBlob(blob);}
         btn.textContent="\ud83d\udcf7 Export as Image";btn.disabled=false;
       },"image/png");
     };
-    img.onerror=()=>{btn.textContent="\ud83d\udcf7 Export as Image";btn.disabled=false;};
+    img.onerror=function(){btn.textContent="\ud83d\udcf7 Export as Image";btn.disabled=false;};
     img.src=url;
   }catch(e){console.error(e);btn.textContent="\ud83d\udcf7 Export as Image";btn.disabled=false;}
 });
 function downloadBlob(blob){
-  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);
   a.download="formation-"+currentFormation+".png";document.body.appendChild(a);a.click();
-  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},100);
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},100);
 }
 
-// ── Clear ──
-document.getElementById("clearBtn").addEventListener("click",()=>{
-  players.forEach(p=>p.name="");bench.forEach(b=>b.name="");
+document.getElementById("clearBtn").addEventListener("click",function(){
+  for(var i=0;i<players.length;i++)players[i].name="";
+  for(var j=0;j<bench.length;j++)bench[j].name="";
   editingIdx=null;drawAll();saveState();
 });
 
-// ── Theme change ──
-window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",()=>{drawField();drawAll();});
+window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",function(){drawField();drawAll();});
 
-// ── Init ──
 loadState();drawField();drawFormationBtns();drawAll();
 </script>
 
