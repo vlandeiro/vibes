@@ -3,212 +3,383 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Formation">
 <meta name="color-scheme" content="light dark">
 <title>Formation Builder</title>
+<!-- Google Fonts loaded as link tags (more reliable than @import in <style>) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet">
 <style>
-  /* ── Inline font faces for reliability on GitHub Pages ── */
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif&display=swap');
-
-/* ── Dark theme (default) ── */
-:root {
-–accent: #f0c040;
-–bg: #111a0e;
-–panel: #1a2216;
-–panel-border: #3a4a34;
-–field-border: #3a4a34;
-–text: #e0d8c8;
-–text-muted: #a89e88;
-–btn-bg: #2a3a24;
-–btn-text: #d4ccb4;
-–btn-active: #f0c040;
-–btn-active-text: #1a2216;
-–input-placeholder: #908870;
-–field-wrap-bg: #0d1a08;
-–shadow-strong: rgba(0,0,0,0.5);
-–shadow-med: rgba(0,0,0,0.3);
-–bench-bg: #14200f;
-–bench-slot-bg: #1e2e18;
-–bench-slot-border: #3a4a34;
-–swap-hl: rgba(240,192,64,0.25);
-–export-bg: #2a3a24;
-–export-text: #e0d8c8;
-–export-hover: #3a5030;
-}
-/* ── Light theme ── */
-@media (prefers-color-scheme: light) {
-:root {
-–accent: #2e7d32;
-–bg: #f0ede6;
-–panel: #ffffff;
-–panel-border: #d0ccc0;
-–field-border: #c0bca8;
-–text: #2a2a20;
-–text-muted: #6a6250;
-–btn-bg: #e8e4d8;
-–btn-text: #3a3828;
-–btn-active: #2e7d32;
-–btn-active-text: #ffffff;
-–input-placeholder: #a09880;
-–field-wrap-bg: #d8e8d0;
-–shadow-strong: rgba(0,0,0,0.12);
-–shadow-med: rgba(0,0,0,0.08);
-–bench-bg: #e4e0d4;
-–bench-slot-bg: #f5f2ea;
-–bench-slot-border: #c8c4b8;
-–swap-hl: rgba(46,125,50,0.18);
-–export-bg: #2e7d32;
-–export-text: #ffffff;
-–export-hover: #388e3c;
-}
-}
+  /* ── Dark theme (default) ── */
+  :root {
+    --accent: #f0c040;
+    --bg: #111a0e;
+    --panel: #1a2216;
+    --panel-border: #3a4a34;
+    --field-border: #3a4a34;
+    --text: #e0d8c8;
+    --text-muted: #a89e88;
+    --btn-bg: #2a3a24;
+    --btn-text: #d4ccb4;
+    --btn-active: #f0c040;
+    --btn-active-text: #1a2216;
+    --input-placeholder: #908870;
+    --field-wrap-bg: #0d1a08;
+    --shadow-strong: rgba(0,0,0,0.5);
+    --shadow-med: rgba(0,0,0,0.3);
+    --bench-bg: #14200f;
+    --bench-slot-bg: #1e2e18;
+    --bench-slot-border: #3a4a34;
+    --swap-hl: rgba(240,192,64,0.25);
+    --export-bg: #2a3a24;
+    --export-text: #e0d8c8;
+    --export-hover: #3a5030;
+  }
+  /* ── Light theme ── */
+  @media (prefers-color-scheme: light) {
+    :root {
+      --accent: #2e7d32;
+      --bg: #f0ede6;
+      --panel: #ffffff;
+      --panel-border: #d0ccc0;
+      --field-border: #c0bca8;
+      --text: #2a2a20;
+      --text-muted: #6a6250;
+      --btn-bg: #e8e4d8;
+      --btn-text: #3a3828;
+      --btn-active: #2e7d32;
+      --btn-active-text: #ffffff;
+      --input-placeholder: #a09880;
+      --field-wrap-bg: #d8e8d0;
+      --shadow-strong: rgba(0,0,0,0.12);
+      --shadow-med: rgba(0,0,0,0.08);
+      --bench-bg: #e4e0d4;
+      --bench-slot-bg: #f5f2ea;
+      --bench-slot-border: #c8c4b8;
+      --swap-hl: rgba(46,125,50,0.18);
+      --export-bg: #2e7d32;
+      --export-text: #ffffff;
+      --export-hover: #388e3c;
+    }
+  }
 
 - { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
+html {
+overflow-x: hidden;
+width: 100%;
+}
+
 body {
-background:var(–bg);
-font-family:‘DM Sans’, system-ui, -apple-system, ‘Segoe UI’, Roboto, Helvetica, Arial, sans-serif;
-color:var(–text);
-min-height:100vh;
-display:flex; flex-direction:column; align-items:center;
-padding:24px 12px 40px;
-overflow-x:hidden;
-transition:background .3s, color .3s;
+background-color: var(–bg);
+font-family: ‘DM Sans’, system-ui, -apple-system, ‘Segoe UI’, Roboto, Helvetica, Arial, sans-serif;
+color: var(–text);
+min-height: 100vh;
+width: 100%;
+max-width: 100vw;
+overflow-x: hidden;
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 20px 10px 40px;
 }
 
 h1 {
-font-family:‘Instrument Serif’, Georgia, ‘Times New Roman’, serif;
-font-size:28px; font-weight:400; color:var(–accent);
-letter-spacing:.5px; margin-bottom:2px;
+font-family: ‘Instrument Serif’, Georgia, ‘Times New Roman’, serif;
+font-size: 26px;
+font-weight: 400;
+color: var(–accent);
+letter-spacing: 0.5px;
+margin-bottom: 2px;
 }
-.subtitle { font-size:13px; color:var(–text-muted); margin-bottom:18px; text-align:center; max-width:420px; line-height:1.4; }
 
-.formations { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:18px; max-width:460px; }
-.formations button {
-padding:6px 14px; border-radius:6px;
-border:1px solid var(–panel-border);
-background:var(–btn-bg); color:var(–btn-text);
-font-family:inherit; font-size:13px; font-weight:600;
-cursor:pointer; transition:all .15s;
+.subtitle {
+font-size: 12px;
+color: var(–text-muted);
+margin-bottom: 16px;
+text-align: center;
+max-width: 90vw;
+line-height: 1.4;
 }
+
+.formations {
+display: flex;
+flex-wrap: wrap;
+gap: 5px;
+justify-content: center;
+margin-bottom: 14px;
+max-width: 100%;
+padding: 0 4px;
+}
+
+.formations button {
+padding: 5px 11px;
+border-radius: 6px;
+border: 1px solid var(–panel-border);
+background-color: var(–btn-bg);
+color: var(–btn-text);
+font-family: ‘DM Sans’, system-ui, sans-serif;
+font-size: 13px;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.15s;
+}
+
 .formations button.active {
-border-color:var(–accent); background:var(–btn-active); color:var(–btn-active-text);
+border-color: var(–accent);
+background-color: var(–btn-active);
+color: var(–btn-active-text);
 }
 
 .main {
-display:flex; gap:16px; flex-wrap:wrap;
-justify-content:center; align-items:flex-start;
-width:100%; max-width:720px;
+display: flex;
+gap: 12px;
+flex-wrap: wrap;
+justify-content: center;
+align-items: flex-start;
+width: 100%;
+max-width: 100%;
+padding: 0 2px;
 }
 
-.pitch-col { display:flex; flex-direction:column; gap:10px; flex:1 1 420px; max-width:440px; }
+.pitch-col {
+display: flex;
+flex-direction: column;
+gap: 10px;
+width: 100%;
+max-width: 400px;
+min-width: 0;
+}
 
 .field-wrap {
-background:var(–field-wrap-bg); border-radius:12px; padding:10px;
-box-shadow:0 8px 32px var(–shadow-strong);
-border:1px solid var(–field-border);
-touch-action:none; position:relative;
+background-color: var(–field-wrap-bg);
+border-radius: 12px;
+padding: 8px;
+box-shadow: 0 8px 32px var(–shadow-strong);
+border: 1px solid var(–field-border);
+touch-action: none;
 }
-.field-wrap svg { width:100%; display:block; border-radius:8px; }
+
+.field-wrap svg {
+width: 100%;
+display: block;
+border-radius: 8px;
+}
 
 /* Bench */
 .bench {
-background:var(–bench-bg); border:1px solid var(–panel-border);
-border-radius:10px; padding:10px 12px;
+background-color: var(–bench-bg);
+border: 1px solid var(–panel-border);
+border-radius: 10px;
+padding: 10px 12px;
+touch-action: none;
 }
-.bench-title {
-font-family:‘Instrument Serif’, Georgia, serif;
-font-size:14px; font-weight:400; color:var(–accent); margin-bottom:8px;
-}
-.bench-row { display:flex; gap:8px; flex-wrap:wrap; }
-.bench-slot {
-width:62px; height:72px; border-radius:8px;
-background:var(–bench-slot-bg);
-border:2px dashed var(–bench-slot-border);
-display:flex; flex-direction:column; align-items:center; justify-content:center;
-cursor:grab; transition:all .15s; position:relative; user-select:none;
-}
-.bench-slot.dragging { opacity:.5; }
-.bench-slot.highlight { border-color:var(–accent); background:var(–swap-hl); border-style:solid; }
-.bench-slot .bench-name {
-font-size:9px; font-weight:600; color:var(–text);
-margin-top:2px; max-width:58px; overflow:hidden;
-text-overflow:ellipsis; white-space:nowrap; text-align:center;
-}
-.bench-slot .bench-name.empty { color:var(–text-muted); font-style:italic; }
 
-.actions-row { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
-.action-btn {
-padding:8px 18px; border-radius:8px; border:none;
-background:var(–export-bg); color:var(–export-text);
-font-family:inherit; font-size:13px; font-weight:600;
-cursor:pointer; transition:all .15s;
+.bench-title {
+font-family: ‘Instrument Serif’, Georgia, serif;
+font-size: 14px;
+font-weight: 400;
+color: var(–accent);
+margin-bottom: 8px;
 }
-.action-btn:hover { background:var(–export-hover); }
-.action-btn:active { transform:scale(.97); }
+
+.bench-row {
+display: flex;
+gap: 8px;
+flex-wrap: wrap;
+}
+
+.bench-slot {
+width: 62px;
+height: 72px;
+border-radius: 8px;
+background-color: var(–bench-slot-bg);
+border: 2px dashed var(–bench-slot-border);
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+cursor: grab;
+transition: all 0.15s;
+user-select: none;
+touch-action: none;
+}
+
+.bench-slot.dragging { opacity: 0.4; }
+
+.bench-slot.highlight {
+border-color: var(–accent);
+background-color: var(–swap-hl);
+border-style: solid;
+}
+
+.bench-slot .bench-name {
+font-size: 9px;
+font-weight: 600;
+color: var(–text);
+margin-top: 2px;
+max-width: 58px;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+text-align: center;
+}
+
+.bench-slot .bench-name.empty {
+color: var(–text-muted);
+font-style: italic;
+}
+
+.actions-row {
+display: flex;
+gap: 8px;
+justify-content: center;
+}
+
+.action-btn {
+padding: 8px 18px;
+border-radius: 8px;
+border: none;
+background-color: var(–export-bg);
+color: var(–export-text);
+font-family: ‘DM Sans’, system-ui, sans-serif;
+font-size: 13px;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.15s;
+}
+
+.action-btn:hover { background-color: var(–export-hover); }
+.action-btn:active { transform: scale(0.97); }
 
 /* Roster */
 .roster {
-background:var(–panel); border:1px solid var(–panel-border);
-border-radius:12px; padding:16px 18px; min-width:200px;
-box-shadow:0 4px 20px var(–shadow-med);
-flex:1 1 200px; max-width:260px;
+background-color: var(–panel);
+border: 1px solid var(–panel-border);
+border-radius: 12px;
+padding: 14px 14px;
+box-shadow: 0 4px 20px var(–shadow-med);
+width: 100%;
+max-width: 400px;
+min-width: 0;
 }
-.roster-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+
+.roster-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 12px;
+}
+
 .roster-header h2 {
-font-family:‘Instrument Serif’, Georgia, serif;
-font-size:18px; font-weight:400; color:var(–accent);
+font-family: ‘Instrument Serif’, Georgia, serif;
+font-size: 18px;
+font-weight: 400;
+color: var(–accent);
 }
+
 .roster-header button {
-font-size:11px; color:var(–text-muted); background:none; border:none;
-cursor:pointer; font-family:inherit; text-decoration:underline; text-underline-offset:2px;
+font-size: 11px;
+color: var(–text-muted);
+background: none;
+border: none;
+cursor: pointer;
+font-family: ‘DM Sans’, system-ui, sans-serif;
+text-decoration: underline;
+text-underline-offset: 2px;
 }
+
 .section-label {
-font-size:10px; font-weight:600; color:var(–text-muted);
-text-transform:uppercase; letter-spacing:1px; margin:10px 0 4px;
+font-size: 10px;
+font-weight: 600;
+color: var(–text-muted);
+text-transform: uppercase;
+letter-spacing: 1px;
+margin: 10px 0 4px;
 }
-.roster-list { display:flex; flex-direction:column; gap:3px; }
+
+.roster-list {
+display: flex;
+flex-direction: column;
+gap: 3px;
+}
+
 .roster-row {
-display:flex; align-items:center; gap:10px; padding:6px 10px;
-border-radius:6px; cursor:pointer; border:1px solid transparent; transition:all .15s;
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 6px 10px;
+border-radius: 6px;
+cursor: pointer;
+border: 1px solid transparent;
+transition: all 0.15s;
 }
-.roster-row.editing { background:var(–swap-hl); border-color:var(–accent); }
-.roster-row svg { flex-shrink:0; }
+
+.roster-row.editing {
+background-color: var(–swap-hl);
+border-color: var(–accent);
+}
+
+.roster-row svg { flex-shrink: 0; }
+
 .roster-row input {
-flex:1; background:transparent; border:none; outline:none;
-color:var(–text); font-family:inherit; font-size:13px; font-weight:500; padding:0;
+flex: 1;
+min-width: 0;
+background: transparent;
+border: none;
+outline: none;
+color: var(–text);
+font-family: ‘DM Sans’, system-ui, sans-serif;
+font-size: 13px;
+font-weight: 500;
+padding: 0;
 }
-.roster-row input::placeholder { color:var(–input-placeholder); }
-.roster-name { font-size:13px; font-weight:500; }
-.roster-name.empty { color:var(–text-muted); font-style:italic; }
-.roster-name.filled { color:var(–text); }
+
+.roster-row input::placeholder { color: var(–input-placeholder); }
+
+.roster-name { font-size: 13px; font-weight: 500; }
+.roster-name.empty { color: var(–text-muted); font-style: italic; }
+.roster-name.filled { color: var(–text); }
+
 .roster-footer {
-margin-top:14px; padding-top:10px;
-border-top:1px solid var(–panel-border);
-font-size:11px; color:var(–text-muted); line-height:1.5;
+margin-top: 14px;
+padding-top: 10px;
+border-top: 1px solid var(–panel-border);
+font-size: 11px;
+color: var(–text-muted);
+line-height: 1.5;
 }
+
 .save-badge {
-display:inline-block; font-size:10px; color:var(–accent);
-opacity:0; transition:opacity .3s; margin-left:8px;
+display: inline-block;
+font-size: 10px;
+color: var(–accent);
+opacity: 0;
+transition: opacity 0.3s;
+margin-left: 6px;
 }
-.save-badge.show { opacity:1; }
+.save-badge.show { opacity: 1; }
 
-/* Swap ghost indicator */
 .swap-ghost {
-position:fixed; pointer-events:none; z-index:9999;
-width:50px; height:50px; opacity:.8;
-transform:translate(-50%,-50%);
-display:none;
+position: fixed;
+pointer-events: none;
+z-index: 9999;
+width: 50px;
+height: 50px;
+opacity: 0.8;
+transform: translate(-50%, -50%);
+display: none;
 }
 
-@media (max-width:600px) {
-body { padding:16px 8px 32px; }
-.main { flex-direction:column; align-items:center; }
-.pitch-col { max-width:100%; }
-.roster { max-width:100%; min-width:0; width:100%; }
+/* Desktop: side-by-side */
+@media (min-width: 700px) {
+.main { max-width: 680px; }
+.pitch-col { max-width: 400px; flex: 1 1 380px; }
+.roster { max-width: 260px; flex: 1 1 220px; }
 }
 </style>
 
@@ -216,7 +387,7 @@ body { padding:16px 8px 32px; }
 <body>
 
 <h1>Formation Builder</h1>
-<p class="subtitle">8v8 · Drag to reposition · Tap roster to rename · Drag bench player onto field to swap <span id="saveBadge" class="save-badge">&#10003; Saved</span></p>
+<p class="subtitle">8v8 · Drag to reposition · Tap roster to rename · Drag bench onto field to swap <span id="saveBadge" class="save-badge">&#10003; Saved</span></p>
 
 <div class="formations" id="formationBtns"></div>
 
@@ -243,12 +414,10 @@ body { padding:16px 8px 32px; }
   </div>
 </div>
 
-<!-- Ghost element for bench drag -->
-
 <div class="swap-ghost" id="swapGhost"></div>
 
 <script>
-const FW=380, FH=560, PR=24;
+const FW=380,FH=560,PR=24;
 const JERSEY="M -6 -18 L -14 -14 L -22 -8 L -18 0 L -12 -4 L -12 18 Q -12 22 -8 22 L 8 22 Q 12 22 12 18 L 12 -4 L 18 0 L 22 -8 L 14 -14 L 6 -18 Q 3 -14 0 -14 Q -3 -14 -6 -18 Z";
 const COLLAR="M -6 -18 Q -3 -12 0 -12 Q 3 -12 6 -18";
 const NS="http://www.w3.org/2000/svg";
@@ -270,32 +439,30 @@ let players=FORMATIONS["3-3-1"].map(p=>({...p,name:""}));
 let bench=Array.from({length:BENCH_COUNT},()=>({name:"",role:"SUB"}));
 let editingIdx=null;
 let draggingFieldIdx=-1;
-let benchDragState=null; // {benchIdx, active, targetFieldIdx}
+let benchDragState=null;
 
-// ── Theme helpers ──
+// ── Theme ──
 function isDark(){return window.matchMedia("(prefers-color-scheme:dark)").matches;}
 function themeColors(){
   const d=isDark();
   return{
-    fieldBase:d?"#1a6b37":"#1e8040", fieldStripe:d?"#237d44":"#2a9850",
-    playerFill:d?"#e8dcc8":"#ffffff", playerStroke:d?"#5a4a30":"#4a6a40", playerText:d?"#2d2418":"#1a3010",
-    gkFill:d?"#f0c040":"#ffd54f", gkStroke:d?"#a07810":"#b08a10",
-    benchFill:d?"#8aae7a":"#b0d4a8", benchStroke:d?"#4a6040":"#5a8050", benchText:d?"#1a2a10":"#1a3010",
+    fieldBase:d?"#1a6b37":"#1e8040",fieldStripe:d?"#237d44":"#2a9850",
+    playerFill:d?"#e8dcc8":"#ffffff",playerStroke:d?"#5a4a30":"#4a6a40",playerText:d?"#2d2418":"#1a3010",
+    gkFill:d?"#f0c040":"#ffd54f",gkStroke:d?"#a07810":"#b08a10",
+    benchFill:d?"#8aae7a":"#b0d4a8",benchStroke:d?"#4a6040":"#5a8050",benchText:d?"#1a2a10":"#1a3010",
   };
 }
 
 // ── Persistence ──
 function loadState(){
   try{
-    const s=JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if(!s)return;
+    const s=JSON.parse(localStorage.getItem(STORAGE_KEY));if(!s)return;
     if(s.formation&&FORMATIONS[s.formation])currentFormation=s.formation;
     if(Array.isArray(s.players)&&s.players.length===8)
       players=s.players.map((p,i)=>({
         x:typeof p.x==="number"?p.x:FORMATIONS[currentFormation][i].x,
         y:typeof p.y==="number"?p.y:FORMATIONS[currentFormation][i].y,
-        role:p.role||FORMATIONS[currentFormation][i].role,
-        name:p.name||""
+        role:p.role||FORMATIONS[currentFormation][i].role,name:p.name||""
       }));
     if(Array.isArray(s.bench))bench=s.bench.slice(0,BENCH_COUNT).map(b=>({name:b.name||"",role:"SUB"}));
     while(bench.length<BENCH_COUNT)bench.push({name:"",role:"SUB"});
@@ -319,31 +486,20 @@ function drawField(){
   const svg=document.getElementById("field");svg.innerHTML="";
   const c=themeColors();
   const defs=el("defs");
-  // Wide grass stripes
   const pat=el("pattern",{id:"grass",patternUnits:"userSpaceOnUse",width:FW,height:80});
   pat.appendChild(el("rect",{width:FW,height:80,fill:c.fieldBase}));
   pat.appendChild(el("rect",{x:0,y:0,width:FW,height:40,fill:c.fieldStripe,opacity:.3}));
   defs.appendChild(pat);
-  // Drop shadow for names
   const flt=el("filter",{id:"nshadow",x:"-50%",y:"-50%",width:"200%",height:"200%"});
-  const feG=el("feGaussianBlur",{"in":"SourceAlpha",stdDeviation:2,result:"blur"});
-  flt.appendChild(feG);
-  const feO=el("feOffset",{"in":"blur",dx:0,dy:1,result:"offblur"});
-  flt.appendChild(feO);
-  const feF=el("feFlood",{"flood-color":"#000","flood-opacity":.6,result:"color"});
-  flt.appendChild(feF);
-  const feC=el("feComposite",{in:"color",in2:"offblur",operator:"in",result:"shadow"});
-  flt.appendChild(feC);
-  const feM=el("feMerge");
-  feM.appendChild(el("feMergeNode",{"in":"shadow"}));
-  feM.appendChild(el("feMergeNode",{"in":"SourceGraphic"}));
-  flt.appendChild(feM);
+  const feG=el("feGaussianBlur",{"in":"SourceAlpha",stdDeviation:2,result:"blur"});flt.appendChild(feG);
+  const feO=el("feOffset",{"in":"blur",dx:0,dy:1,result:"offblur"});flt.appendChild(feO);
+  const feF=el("feFlood",{"flood-color":"#000","flood-opacity":.6,result:"color"});flt.appendChild(feF);
+  const feC=el("feComposite",{in:"color",in2:"offblur",operator:"in",result:"shadow"});flt.appendChild(feC);
+  const feM=el("feMerge");feM.appendChild(el("feMergeNode",{"in":"shadow"}));feM.appendChild(el("feMergeNode",{"in":"SourceGraphic"}));flt.appendChild(feM);
   defs.appendChild(flt);
   svg.appendChild(defs);
-
   svg.appendChild(el("rect",{width:FW,height:FH,fill:"url(#grass)"}));
   const L="rgba(255,255,255,0.5)";
-  // Field markings
   svg.appendChild(el("rect",{x:20,y:20,width:FW-40,height:FH-40,fill:"none",stroke:L,"stroke-width":1.5}));
   svg.appendChild(el("line",{x1:20,y1:FH/2,x2:FW-20,y2:FH/2,stroke:L,"stroke-width":1.5}));
   svg.appendChild(el("circle",{cx:FW/2,cy:FH/2,r:45,fill:"none",stroke:L,"stroke-width":1.5}));
@@ -367,35 +523,25 @@ function drawPlayers(){
   document.querySelectorAll(".player-g").forEach(e=>e.remove());
   const svg=document.getElementById("field"),c=themeColors();
   const highlightIdx=benchDragState&&benchDragState.active?benchDragState.targetFieldIdx:-1;
-
   players.forEach((p,i)=>{
     const px=p.x*FW,py=p.y*FH,isGK=p.role==="GK";
     const fill=isGK?c.gkFill:c.playerFill,stroke=isGK?c.gkStroke:c.playerStroke;
     const g=el("g",{transform:`translate(${px},${py})`,"data-idx":i,class:"player-g"});
     g.style.cursor="grab";
-
-    // highlight ring for swap target
     if(highlightIdx===i){
       g.appendChild(el("circle",{r:30,fill:"none",stroke:"#f0c040","stroke-width":3,opacity:.8}));
     }
-
     g.appendChild(el("path",{d:JERSEY,fill,stroke,"stroke-width":1.8,"stroke-linejoin":"round"}));
     g.appendChild(el("path",{d:COLLAR,fill:"none",stroke,"stroke-width":1,opacity:.4}));
-
-    // role on jersey
     const rt=el("text",{y:6,"text-anchor":"middle","dominant-baseline":"central",fill:c.playerText});
     rt.style.cssText="font:700 11px 'DM Sans',system-ui,sans-serif;pointer-events:none;user-select:none;";
     rt.textContent=p.role;g.appendChild(rt);
-
-    // name below jersey
     if(p.name){
       const nm=p.name.length>8?p.name.slice(0,7)+"\u2026":p.name;
       const nt=el("text",{y:35,"text-anchor":"middle","dominant-baseline":"central",fill:"#fff",filter:"url(#nshadow)"});
       nt.style.cssText="font:600 10px 'DM Sans',system-ui,sans-serif;pointer-events:none;user-select:none;";
       nt.textContent=nm;g.appendChild(nt);
     }
-
-    // hit area
     g.appendChild(el("circle",{r:28,fill:"transparent"}));
     svg.appendChild(g);
   });
@@ -406,47 +552,45 @@ function drawBench(){
   const row=document.getElementById("benchRow");row.innerHTML="";
   const c=themeColors();
   const dragActive=benchDragState&&benchDragState.active;
-
   bench.forEach((b,i)=>{
     const slot=document.createElement("div");
     slot.className="bench-slot";
     if(dragActive&&benchDragState.benchIdx===i)slot.classList.add("dragging");
     slot.dataset.benchIdx=i;
-
-    const svg=`<svg width="32" height="32" viewBox="-24 -20 48 44" xmlns="${NS}">
+    slot.innerHTML=`<svg width="32" height="32" viewBox="-24 -20 48 44" xmlns="${NS}">
       <path d="${JERSEY}" fill="${c.benchFill}" stroke="${c.benchStroke}" stroke-width="1.5" stroke-linejoin="round"/>
       <text y="8" text-anchor="middle" dominant-baseline="central" fill="${c.benchText}" style="font:700 10px 'DM Sans',system-ui,sans-serif">SUB</text>
     </svg>`;
-    slot.innerHTML=svg;
-
     const nameEl=document.createElement("div");
     nameEl.className="bench-name"+(b.name?"":" empty");
     nameEl.textContent=b.name||"Sub "+(i+1);
     slot.appendChild(nameEl);
-
     row.appendChild(slot);
   });
 }
 
-// ── Bench drag logic (document-level pointer events) ──
+// ── Bench drag-to-swap ──
 const ghost=document.getElementById("swapGhost");
 
-document.getElementById("benchRow").addEventListener("pointerdown",(e)=>{
+document.getElementById("benchRow").addEventListener("pointerdown",function(e){
   const slot=e.target.closest(".bench-slot");
   if(!slot)return;
   e.preventDefault();
+  e.stopPropagation();
   const idx=parseInt(slot.dataset.benchIdx);
   benchDragState={benchIdx:idx,active:false,startX:e.clientX,startY:e.clientY,targetFieldIdx:-1};
-});
+  // Capture on the bench row so we get all subsequent events
+  this.setPointerCapture(e.pointerId);
+},false);
 
-document.addEventListener("pointermove",(e)=>{
+document.getElementById("benchRow").addEventListener("pointermove",function(e){
   if(!benchDragState)return;
-  // Activate after small movement threshold
+  e.preventDefault();
+  e.stopPropagation();
   if(!benchDragState.active){
     const dx=e.clientX-benchDragState.startX,dy=e.clientY-benchDragState.startY;
-    if(Math.abs(dx)<8&&Math.abs(dy)<8)return;
+    if(Math.abs(dx)<6&&Math.abs(dy)<6)return;
     benchDragState.active=true;
-    // Show ghost
     const c=themeColors();
     ghost.innerHTML=`<svg width="50" height="50" viewBox="-26 -22 52 48" xmlns="${NS}"><path d="${JERSEY}" fill="${c.benchFill}" stroke="${c.benchStroke}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
     ghost.style.display="block";
@@ -454,37 +598,42 @@ document.addEventListener("pointermove",(e)=>{
   }
   ghost.style.left=e.clientX+"px";
   ghost.style.top=e.clientY+"px";
-
-  // Find nearest field player
   const target=findNearestFieldPlayer(e.clientX,e.clientY);
   if(target!==benchDragState.targetFieldIdx){
     benchDragState.targetFieldIdx=target;
     drawPlayers();
   }
-});
+},false);
 
-document.addEventListener("pointerup",(e)=>{
+document.getElementById("benchRow").addEventListener("pointerup",function(e){
   if(!benchDragState)return;
+  e.preventDefault();
   ghost.style.display="none";
-
   if(benchDragState.active&&benchDragState.targetFieldIdx>=0){
-    // Swap names
     const fi=benchDragState.targetFieldIdx,bi=benchDragState.benchIdx;
     const tmp=players[fi].name;
     players[fi].name=bench[bi].name;
     bench[bi].name=tmp;
     saveState();
+  } else if(!benchDragState.active){
+    // Was a tap, not a drag — open editor
+    editingIdx="b"+benchDragState.benchIdx;
   }
-
   benchDragState=null;
-  drawPlayers();drawBench();
-});
+  drawAll();
+},false);
+
+document.getElementById("benchRow").addEventListener("pointercancel",function(){
+  if(!benchDragState)return;
+  ghost.style.display="none";
+  benchDragState=null;
+  drawAll();
+},false);
 
 function findNearestFieldPlayer(cx,cy){
   const svg=document.getElementById("field");
   const rect=svg.getBoundingClientRect();
-  const scaleX=FW/rect.width, scaleY=FH/rect.height;
-  let best=-1, bestDist=50; // threshold in CSS px
+  let best=-1,bestDist=50;
   for(let i=0;i<players.length;i++){
     const px=players[i].x*rect.width+rect.left;
     const py=players[i].y*rect.height+rect.top;
@@ -498,50 +647,35 @@ function findNearestFieldPlayer(cx,cy){
 function drawRoster(){
   const cont=document.getElementById("rosterContent");cont.innerHTML="";
   const c=themeColors();
-
-  // Field section
   addRosterSection(cont,"On Field",players.map((p,i)=>({...p,id:"f"+i,idx:i,type:"field"})),c);
-  // Bench section
   addRosterSection(cont,"Bench",bench.map((b,i)=>({...b,id:"b"+i,idx:i,type:"bench"})),c);
 }
 
 function addRosterSection(cont,label,items,c){
   const lbl=document.createElement("div");lbl.className="section-label";lbl.textContent=label;cont.appendChild(lbl);
   const list=document.createElement("div");list.className="roster-list";cont.appendChild(list);
-
   items.forEach(item=>{
     const row=document.createElement("div");
     const isEditing=editingIdx===item.id;
     row.className="roster-row"+(isEditing?" editing":"");
-
     const isField=item.type==="field";
     const isGK=isField&&item.role==="GK";
     let fill,stroke,textFill,roleLabel;
-    if(isField){
-      fill=isGK?c.gkFill:c.playerFill; stroke=isGK?c.gkStroke:c.playerStroke; textFill=c.playerText; roleLabel=item.role;
-    }else{
-      fill=c.benchFill; stroke=c.benchStroke; textFill=c.benchText; roleLabel="SUB";
-    }
-
+    if(isField){fill=isGK?c.gkFill:c.playerFill;stroke=isGK?c.gkStroke:c.playerStroke;textFill=c.playerText;roleLabel=item.role;}
+    else{fill=c.benchFill;stroke=c.benchStroke;textFill=c.benchText;roleLabel="SUB";}
     row.innerHTML=`<svg width="24" height="24" viewBox="-24 -20 48 44" xmlns="${NS}"><path d="${JERSEY}" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round"/><text y="8" text-anchor="middle" dominant-baseline="central" fill="${textFill}" style="font:700 10px 'DM Sans',system-ui,sans-serif">${roleLabel}</text></svg>`;
-
     if(isEditing){
-      const inp=document.createElement("input");
-      inp.value=item.name;inp.placeholder=isField?"Player name":"Sub name";inp.maxLength=14;
+      const inp=document.createElement("input");inp.value=item.name;inp.placeholder=isField?"Player name":"Sub name";inp.maxLength=14;
       const commit=()=>{
-        if(isField)players[item.idx].name=inp.value.trim();
-        else bench[item.idx].name=inp.value.trim();
+        if(isField)players[item.idx].name=inp.value.trim();else bench[item.idx].name=inp.value.trim();
         editingIdx=null;drawAll();saveState();
       };
       inp.addEventListener("blur",commit);
       inp.addEventListener("keydown",(e)=>{if(e.key==="Enter")commit();if(e.key==="Escape"){editingIdx=null;drawAll();}});
-      row.appendChild(inp);
-      requestAnimationFrame(()=>{inp.focus();inp.select();});
+      row.appendChild(inp);requestAnimationFrame(()=>{inp.focus();inp.select();});
     }else{
-      const span=document.createElement("span");
-      span.className="roster-name "+(item.name?"filled":"empty");
-      span.textContent=item.name||"Tap to name\u2026";
-      row.appendChild(span);
+      const span=document.createElement("span");span.className="roster-name "+(item.name?"filled":"empty");
+      span.textContent=item.name||"Tap to name\u2026";row.appendChild(span);
       row.addEventListener("click",()=>{editingIdx=item.id;drawAll();});
     }
     list.appendChild(row);
@@ -569,15 +703,15 @@ function drawFormationBtns(){
 // ── Field player drag ──
 function getSVGPoint(cx,cy){const svg=document.getElementById("field"),pt=svg.createSVGPoint();pt.x=cx;pt.y=cy;return pt.matrixTransform(svg.getScreenCTM().inverse());}
 
-document.getElementById("field").addEventListener("pointerdown",(e)=>{
+const fieldEl=document.getElementById("field");
+fieldEl.addEventListener("pointerdown",(e)=>{
   if(benchDragState)return;
   const g=e.target.closest(".player-g");if(!g)return;
   e.preventDefault();
   draggingFieldIdx=parseInt(g.dataset.idx);
-  g.style.cursor="grabbing";
-  g.setPointerCapture(e.pointerId);
+  g.style.cursor="grabbing";g.setPointerCapture(e.pointerId);
 });
-document.getElementById("field").addEventListener("pointermove",(e)=>{
+fieldEl.addEventListener("pointermove",(e)=>{
   if(draggingFieldIdx<0)return;e.preventDefault();
   const pt=getSVGPoint(e.clientX,e.clientY);
   const nx=Math.max(PR,Math.min(FW-PR,pt.x))/FW,ny=Math.max(PR,Math.min(FH-PR,pt.y))/FH;
@@ -586,70 +720,53 @@ document.getElementById("field").addEventListener("pointermove",(e)=>{
   if(g)g.setAttribute("transform",`translate(${nx*FW},${ny*FH})`);
   debouncedSave();
 });
-document.getElementById("field").addEventListener("pointerup",()=>{
+fieldEl.addEventListener("pointerup",()=>{
   if(draggingFieldIdx<0)return;
   const g=document.querySelector(`.player-g[data-idx="${draggingFieldIdx}"]`);
-  if(g)g.style.cursor="grab";
-  draggingFieldIdx=-1;
+  if(g)g.style.cursor="grab";draggingFieldIdx=-1;
 });
-document.getElementById("field").addEventListener("pointercancel",()=>{draggingFieldIdx=-1;});
+fieldEl.addEventListener("pointercancel",()=>{draggingFieldIdx=-1;});
 
 // ── Export ──
 document.getElementById("exportBtn").addEventListener("click",async()=>{
   const btn=document.getElementById("exportBtn");
   btn.textContent="Generating\u2026";btn.disabled=true;
-
   try{
-    const benchH=90,pad=15,totalH=FH+pad+benchH;
+    const benchH=90,pad=20,totalH=FH+pad+benchH;
     const c=themeColors();
-
-    // Build a standalone export SVG
     const xsvg=el("svg",{xmlns:NS,width:FW*2,height:totalH*2,viewBox:`0 0 ${FW} ${totalH}`});
-
-    // 1) Background
+    // Background
     xsvg.appendChild(el("rect",{width:FW,height:totalH,fill:isDark()?"#111a0e":"#f0ede6"}));
-
-    // 2) Clone field contents (just the children, not the svg element itself)
+    // Clone field children into a group
     const fieldSvg=document.getElementById("field");
     const fieldG=el("g");
     Array.from(fieldSvg.childNodes).forEach(n=>fieldG.appendChild(n.cloneNode(true)));
     xsvg.appendChild(fieldG);
-
-    // 3) Bench area below field
+    // Bench below
     const by=FH+pad;
-    xsvg.appendChild(el("rect",{x:5,y:by-5,width:FW-10,height:benchH,rx:8,fill:isDark()?"#14200f":"#e4e0d4"}));
-
-    // Bench label
-    const bLabel=el("text",{x:15,y:by+14,fill:isDark()?"#f0c040":"#2e7d32"});
+    xsvg.appendChild(el("rect",{x:8,y:by-5,width:FW-16,height:benchH,rx:8,fill:isDark()?"#14200f":"#e4e0d4"}));
+    const bLabel=el("text",{x:18,y:by+14,fill:isDark()?"#f0c040":"#2e7d32"});
     bLabel.style.cssText="font:600 12px 'DM Sans',system-ui,sans-serif;";
     bLabel.textContent="Bench";xsvg.appendChild(bLabel);
-
-    // Bench jerseys
     bench.forEach((b,i)=>{
-      const bx=30+i*85,bpy=by+50;
+      const bx=30+i*85,bpy=by+52;
       const bg=el("g",{transform:`translate(${bx},${bpy}) scale(0.65)`});
       bg.appendChild(el("path",{d:JERSEY,fill:c.benchFill,stroke:c.benchStroke,"stroke-width":2,"stroke-linejoin":"round"}));
       const rt=el("text",{y:6,"text-anchor":"middle","dominant-baseline":"central",fill:c.benchText});
       rt.style.cssText="font:700 11px 'DM Sans',system-ui,sans-serif;";
-      rt.textContent="SUB";bg.appendChild(rt);
-      xsvg.appendChild(bg);
-      // name
+      rt.textContent="SUB";bg.appendChild(rt);xsvg.appendChild(bg);
       const nm=b.name||(""+(i+1));
       const nt=el("text",{x:bx,y:bpy+22,"text-anchor":"middle","dominant-baseline":"central",fill:isDark()?"#e0d8c8":"#2a2a20"});
       nt.style.cssText="font:600 10px 'DM Sans',system-ui,sans-serif;";
       nt.textContent=nm.length>8?nm.slice(0,7)+"\u2026":nm;xsvg.appendChild(nt);
     });
-
-    // Formation label
-    const fl=el("text",{x:FW-15,y:by+14,"text-anchor":"end",fill:isDark()?"#a89e88":"#6a6250"});
+    const fl=el("text",{x:FW-18,y:by+14,"text-anchor":"end",fill:isDark()?"#a89e88":"#6a6250"});
     fl.style.cssText="font:600 11px 'DM Sans',system-ui,sans-serif;";
     fl.textContent=currentFormation;xsvg.appendChild(fl);
 
-    // Serialize to blob
     const svgStr=new XMLSerializer().serializeToString(xsvg);
     const svgBlob=new Blob([svgStr],{type:"image/svg+xml;charset=utf-8"});
     const url=URL.createObjectURL(svgBlob);
-
     const img=new Image();
     img.onload=()=>{
       const canvas=document.createElement("canvas");
@@ -657,42 +774,35 @@ document.getElementById("exportBtn").addEventListener("click",async()=>{
       const ctx=canvas.getContext("2d");
       ctx.drawImage(img,0,0,FW*2,totalH*2);
       URL.revokeObjectURL(url);
-
       canvas.toBlob((blob)=>{
         const file=new File([blob],"formation.png",{type:"image/png"});
         if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
-          navigator.share({files:[file],title:"Formation – "+currentFormation}).catch(()=>downloadBlob(blob));
-        }else{
-          downloadBlob(blob);
-        }
+          navigator.share({files:[file],title:"Formation \u2013 "+currentFormation}).catch(()=>downloadBlob(blob));
+        }else{downloadBlob(blob);}
         btn.textContent="\ud83d\udcf7 Export as Image";btn.disabled=false;
       },"image/png");
     };
     img.onerror=()=>{btn.textContent="\ud83d\udcf7 Export as Image";btn.disabled=false;};
     img.src=url;
-  }catch(e){
-    console.error(e);btn.textContent="\ud83d\udcf7 Export as Image";btn.disabled=false;
-  }
+  }catch(e){console.error(e);btn.textContent="\ud83d\udcf7 Export as Image";btn.disabled=false;}
 });
-
 function downloadBlob(blob){
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);
   a.download="formation-"+currentFormation+".png";document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},100);
 }
 
-// ── Clear all ──
+// ── Clear ──
 document.getElementById("clearBtn").addEventListener("click",()=>{
   players.forEach(p=>p.name="");bench.forEach(b=>b.name="");
   editingIdx=null;drawAll();saveState();
 });
 
-// ── Theme change listener ──
+// ── Theme change ──
 window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",()=>{drawField();drawAll();});
 
 // ── Init ──
-loadState();
-drawField();drawFormationBtns();drawAll();
+loadState();drawField();drawFormationBtns();drawAll();
 </script>
 
 </body>
