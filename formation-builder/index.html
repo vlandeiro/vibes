@@ -93,7 +93,11 @@
   <input type="text" id="saveNameInput" placeholder="Formation name" maxlength="16">
   <button id="saveFormationBtn">Save</button>
 </div>
-<div id="formationLabel" style="font-size:13px;font-weight:600;color:#f0c040;color:var(--accent);margin-bottom:12px;text-align:center;min-height:18px"></div>
+<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px">
+  <button class="action-btn" id="undoBtn" disabled style="padding:4px 10px;font-size:16px;opacity:0.3">&#8592;</button>
+  <div id="formationLabel" style="font-size:13px;font-weight:600;color:#f0c040;color:var(--accent);text-align:center;min-height:18px"></div>
+  <button class="action-btn" id="redoBtn" disabled style="padding:4px 10px;font-size:16px;opacity:0.3">&#8594;</button>
+</div>
 <div class="main">
   <div class="pitch-col">
     <div class="field-wrap" id="fieldWrap">
@@ -160,6 +164,63 @@ var draggingFieldIdx=-1;
 var benchDragState=null;
 var fieldDragState=null;
 
+// ── Undo/Redo history ──
+var history=[];
+var historyIdx=-1;
+var MAX_HISTORY=40;
+var historyPaused=false;
+
+function takeSnapshot(){
+return JSON.stringify({f:currentFormation,p:players.map(function(p){return{x:p.x,y:p.y,role:p.role,name:p.name,prefs:p.prefs?p.prefs.slice():[]};}),b:bench.map(function(b){return{name:b.name,prefs:b.prefs?b.prefs.slice():[]};})});
+}
+function pushHistory(){
+if(historyPaused)return;
+var snap=takeSnapshot();
+// Don’t push if identical to current
+if(historyIdx>=0&&history[historyIdx]===snap)return;
+// Trim any redo states
+history=history.slice(0,historyIdx+1);
+history.push(snap);
+if(history.length>MAX_HISTORY)history.shift();
+historyIdx=history.length-1;
+updateUndoRedoBtns();
+}
+function restoreSnapshot(snap){
+var s=JSON.parse(snap);
+currentFormation=s.f;
+for(var i=0;i<8;i++){
+players[i].x=s.p[i].x;players[i].y=s.p[i].y;players[i].role=s.p[i].role;
+players[i].name=s.p[i].name;players[i].prefs=s.p[i].prefs||[];
+}
+for(var j=0;j<5;j++){
+bench[j].name=s.b[j]?s.b[j].name||””:””;
+bench[j].prefs=s.b[j]&&s.b[j].prefs?s.b[j].prefs:[];
+}
+}
+function undo(){
+if(historyIdx<=0)return;
+historyIdx–;
+historyPaused=true;
+restoreSnapshot(history[historyIdx]);
+drawField();drawFormationBtns();drawAll();saveState();
+historyPaused=false;
+updateUndoRedoBtns();
+}
+function redo(){
+if(historyIdx>=history.length-1)return;
+historyIdx++;
+historyPaused=true;
+restoreSnapshot(history[historyIdx]);
+drawField();drawFormationBtns();drawAll();saveState();
+historyPaused=false;
+updateUndoRedoBtns();
+}
+function updateUndoRedoBtns(){
+var ub=document.getElementById(“undoBtn”),rb=document.getElementById(“redoBtn”);
+if(ub){ub.disabled=historyIdx<=0;ub.style.opacity=historyIdx<=0?“0.3”:“1”;}
+if(rb){rb.disabled=historyIdx>=history.length-1;rb.style.opacity=historyIdx>=history.length-1?“0.3”:“1”;}
+}
+
 function isDark(){return window.matchMedia(”(prefers-color-scheme:dark)”).matches;}
 function themeColors(){
 var d=isDark();
@@ -191,6 +252,7 @@ if(s.bench[bi])bench[bi]={name:s.bench[bi].name||””,role:“SUB”,prefs:Arr
 }catch(e){}
 }
 function saveState(){
+pushHistory();
 try{
 localStorage.setItem(STORAGE_KEY,JSON.stringify({formation:currentFormation,players:players,bench:bench}));
 var b=document.getElementById(“saveBadge”);b.style.opacity=“1”;setTimeout(function(){b.style.opacity=“0”;},1200);
@@ -661,12 +723,17 @@ if(el){el.textContent=msg;setTimeout(function(){el.textContent=””;},3000);}
 var b=document.getElementById(“saveBadge”);b.style.opacity=“1”;setTimeout(function(){b.style.opacity=“0”;},1200);
 }
 
+// ── Undo/Redo buttons ──
+document.getElementById(“undoBtn”).addEventListener(“click”,undo);
+document.getElementById(“redoBtn”).addEventListener(“click”,redo);
+
 // ── Theme ──
 window.matchMedia(”(prefers-color-scheme:dark)”).addEventListener(“change”,function(){drawField();drawAll();});
 
 // ── Init ──
 loadCustomFormations();loadState();
 drawField();drawFormationBtns();drawAll();
+pushHistory(); // initial snapshot
 </script>
 
 </body>
