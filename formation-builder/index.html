@@ -606,7 +606,10 @@ border-color: #2e7d32 !important;
       <div class="bench-row" id="benchRow"></div>
     </div>
     <div class="actions-row">
-      <button class="action-btn" id="exportBtn">&#128247; Export as Image</button>
+      <button class="action-btn" id="exportBtn">&#128247; Image</button>
+      <button class="action-btn" id="rosterExportBtn">&#128228; Export</button>
+      <button class="action-btn" id="rosterImportBtn">&#128229; Import</button>
+      <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
     </div>
   </div>
   <div class="roster">
@@ -1275,6 +1278,60 @@ document.getElementById("saveFormationBtn").addEventListener("click",function(){
 // Allow Enter key in save input
 document.getElementById("saveNameInput").addEventListener("keydown",function(e){
   if(e.key==="Enter"){document.getElementById("saveFormationBtn").click();}
+});
+
+// ── Roster Export (JSON file) ──
+document.getElementById("rosterExportBtn").addEventListener("click",function(){
+  var roster={
+    field:players.map(function(p){return{name:p.name,prefs:p.prefs||[]};}),
+    bench:bench.map(function(b){return{name:b.name,prefs:b.prefs||[]};})
+  };
+  var json=JSON.stringify(roster,null,2);
+  var blob=new Blob([json],{type:"application/json"});
+  var file=new File([blob],"roster.json",{type:"application/json"});
+  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+    navigator.share({files:[file],title:"Team Roster"}).catch(function(){
+      var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+      a.download="roster.json";document.body.appendChild(a);a.click();
+      setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},100);
+    });
+  }else{
+    var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+    a.download="roster.json";document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},100);
+  }
+});
+
+// ── Roster Import (JSON file) ──
+document.getElementById("rosterImportBtn").addEventListener("click",function(){
+  document.getElementById("importFileInput").click();
+});
+document.getElementById("importFileInput").addEventListener("change",function(e){
+  var file=e.target.files&&e.target.files[0];
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var data=JSON.parse(ev.target.result);
+      if(data.field&&Array.isArray(data.field)){
+        for(var i=0;i<Math.min(data.field.length,8);i++){
+          players[i].name=data.field[i].name||"";
+          players[i].prefs=Array.isArray(data.field[i].prefs)?data.field[i].prefs:[];
+        }
+      }
+      if(data.bench&&Array.isArray(data.bench)){
+        for(var j=0;j<Math.min(data.bench.length,BENCH_COUNT);j++){
+          bench[j].name=data.bench[j].name||"";
+          bench[j].prefs=Array.isArray(data.bench[j].prefs)?data.bench[j].prefs:[];
+        }
+      }
+      drawAll();saveState();
+    }catch(err){
+      /* silently fail on bad json */
+    }
+  };
+  reader.readAsText(file);
+  e.target.value="";
 });
 
 window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",function(){drawField();drawAll();});
