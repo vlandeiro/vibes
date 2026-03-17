@@ -278,6 +278,17 @@ color: var(–text-muted);
 font-style: italic;
 }
 
+.bench-slot .bench-prefs {
+font-size: 7px;
+color: #a89e88;
+color: var(–text-muted);
+max-width: 54px;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+text-align: center;
+}
+
 /* ── Actions ── */
 .actions-row {
 display: flex;
@@ -377,6 +388,7 @@ background-color: rgba(240,192,64,0.25);
 background-color: var(–swap-hl);
 border-color: #f0c040;
 border-color: var(–accent);
+flex-wrap: wrap;
 }
 
 .roster-row svg { flex-shrink: 0; }
@@ -408,6 +420,14 @@ color: var(–input-placeholder);
 .roster-name { font-size: 13px; font-weight: 500; }
 .roster-name.empty { color: #a89e88; color: var(–text-muted); font-style: italic; }
 .roster-name.filled { color: #e0d8c8; color: var(–text); }
+
+.roster-prefs-display {
+font-size: 10px;
+color: #a89e88;
+color: var(–text-muted);
+margin-left: auto;
+white-space: nowrap;
+}
 
 .roster-footer {
 margin-top: 14px;
@@ -525,6 +545,42 @@ font-size: 12px;
 font-weight: 600;
 cursor: pointer;
 }
+
+/* ── NEW: Preferred position pills ── */
+.pref-pills {
+display: flex;
+flex-wrap: wrap;
+gap: 3px;
+width: 100%;
+margin-top: 4px;
+}
+.pref-pill {
+padding: 2px 7px;
+border-radius: 4px;
+font-size: 10px;
+font-weight: 600;
+cursor: pointer;
+border-width: 1px;
+border-style: solid;
+border-color: #3a4a34;
+border-color: var(–panel-border);
+background-color: transparent;
+color: #a89e88;
+color: var(–text-muted);
+font-family: ‘DM Sans’, system-ui, sans-serif;
+}
+.pref-pill.active {
+background-color: #f0c040 !important;
+color: #1a2216 !important;
+border-color: #f0c040 !important;
+}
+@media (prefers-color-scheme: light) {
+.pref-pill.active {
+background-color: #2e7d32 !important;
+color: #fff !important;
+border-color: #2e7d32 !important;
+}
+}
 </style>
 
 </head>
@@ -559,7 +615,7 @@ cursor: pointer;
       <button id="clearBtn">Clear all</button>
     </div>
     <div id="rosterContent"></div>
-    <div class="roster-footer">Drag a bench player onto a field player to swap them. Names persist across formation changes.</div>
+    <div class="roster-footer">Tap a player to edit name &amp; preferred positions. Drag bench onto field to swap.</div>
   </div>
 </div>
 
@@ -573,6 +629,17 @@ var NS="http://www.w3.org/2000/svg";
 var STORAGE_KEY="formation_builder_v4";
 var BENCH_COUNT=5;
 
+/* NEW: position constants and zone map */
+var ALL_POSITIONS=["GK","LB","CB","RB","CDM","LM","CM","RM","CAM","LW","ST","RW"];
+var ZONES={
+  GK:{x1:0,y1:.88,x2:1,y2:1},
+  LB:{x1:0,y1:.68,x2:.3,y2:.88},CB:{x1:.3,y1:.68,x2:.7,y2:.88},RB:{x1:.7,y1:.68,x2:1,y2:.88},
+  CDM:{x1:.25,y1:.58,x2:.75,y2:.68},
+  LM:{x1:0,y1:.30,x2:.25,y2:.68},CM:{x1:.25,y1:.42,x2:.75,y2:.58},RM:{x1:.75,y1:.30,x2:1,y2:.68},
+  CAM:{x1:.25,y1:.30,x2:.75,y2:.42},
+  LW:{x1:0,y1:0,x2:.28,y2:.30},ST:{x1:.28,y1:0,x2:.72,y2:.30},RW:{x1:.72,y1:0,x2:1,y2:.30}
+};
+
 var FORMATIONS={
   "3-3-1":[{x:.5,y:.92,role:"GK"},{x:.2,y:.75,role:"CB"},{x:.5,y:.72,role:"CB"},{x:.8,y:.75,role:"CB"},{x:.2,y:.48,role:"CM"},{x:.5,y:.45,role:"CM"},{x:.8,y:.48,role:"CM"},{x:.5,y:.22,role:"ST"}],
   "2-3-2":[{x:.5,y:.92,role:"GK"},{x:.3,y:.75,role:"CB"},{x:.7,y:.75,role:"CB"},{x:.2,y:.5,role:"LM"},{x:.5,y:.47,role:"CM"},{x:.8,y:.5,role:"RM"},{x:.35,y:.24,role:"ST"},{x:.65,y:.24,role:"ST"}],
@@ -583,8 +650,10 @@ var FORMATIONS={
 };
 
 var currentFormation="3-3-1";
-var players=FORMATIONS["3-3-1"].map(function(p){return{x:p.x,y:p.y,role:p.role,name:""};});
-var bench=[];for(var bi=0;bi<BENCH_COUNT;bi++)bench.push({name:"",role:"SUB"});
+/* CHANGED: added prefs:[] to player init */
+var players=FORMATIONS["3-3-1"].map(function(p){return{x:p.x,y:p.y,role:p.role,name:"",prefs:[]};});
+/* CHANGED: added prefs:[] to bench init */
+var bench=[];for(var bi=0;bi<BENCH_COUNT;bi++)bench.push({name:"",role:"SUB",prefs:[]});
 var customFormations={};
 var editingIdx=null;
 var draggingFieldIdx=-1;
@@ -598,6 +667,7 @@ function themeColors(){
     playerFill:d?"#e8dcc8":"#ffffff",playerStroke:d?"#5a4a30":"#4a6a40",playerText:d?"#2d2418":"#1a3010",
     gkFill:d?"#f0c040":"#ffd54f",gkStroke:d?"#a07810":"#b08a10",
     benchFill:d?"#8aae7a":"#b0d4a8",benchStroke:d?"#4a6040":"#5a8050",benchText:d?"#1a2a10":"#1a3010",
+    /* NEW */ zoneFill:d?"rgba(240,192,64,0.15)":"rgba(46,125,50,0.12)",zoneStroke:d?"rgba(240,192,64,0.4)":"rgba(46,125,50,0.35)"
   };
 }
 
@@ -631,11 +701,12 @@ function loadState(){
       players=s.players.map(function(p,i){return{
         x:typeof p.x==="number"?p.x:fallback[i].x,
         y:typeof p.y==="number"?p.y:fallback[i].y,
-        role:p.role||fallback[i].role,name:p.name||""
+        role:p.role||fallback[i].role,name:p.name||"",
+        /* NEW */ prefs:Array.isArray(p.prefs)?p.prefs:[]
       };});
     }
-    if(Array.isArray(s.bench)){bench=s.bench.slice(0,BENCH_COUNT).map(function(b){return{name:b.name||"",role:"SUB"};});}
-    while(bench.length<BENCH_COUNT)bench.push({name:"",role:"SUB"});
+    if(Array.isArray(s.bench)){bench=s.bench.slice(0,BENCH_COUNT).map(function(b){return{name:b.name||"",role:"SUB",/* NEW */ prefs:Array.isArray(b.prefs)?b.prefs:[]};});}
+    while(bench.length<BENCH_COUNT)bench.push({name:"",role:"SUB",prefs:[]});
   }catch(e){}
 }
 function saveState(){
@@ -686,6 +757,29 @@ function drawField(){
   svg.appendChild(el("path",{d:"M "+(FW-20)+" "+(FH-28)+" A 8 8 0 0 0 "+(FW-28)+" "+(FH-20),fill:"none",stroke:L,"stroke-width":"1.5"}));
 }
 
+/* NEW: Draw zone highlights when dragging a player with preferred positions */
+function drawZoneHighlights(prefs){
+  var old=document.querySelectorAll(".zone-hl");
+  for(var o=0;o<old.length;o++)old[o].parentNode.removeChild(old[o]);
+  if(!prefs||prefs.length===0)return;
+  var svg=document.getElementById("field"),c=themeColors();
+  for(var i=0;i<prefs.length;i++){
+    var z=ZONES[prefs[i]];if(!z)continue;
+    var x1=z.x1*FW,y1=z.y1*FH,w=(z.x2-z.x1)*FW,h=(z.y2-z.y1)*FH;
+    var r=el("rect",{x:x1,y:y1,width:w,height:h,rx:6,fill:c.zoneFill,stroke:c.zoneStroke,"stroke-width":"1.5","stroke-dasharray":"6 3","class":"zone-hl"});
+    var fp=svg.querySelector(".player-g");
+    if(fp)svg.insertBefore(r,fp);else svg.appendChild(r);
+    // Ghost jersey in zone center
+    var cx=x1+w/2,cy=y1+h/2;
+    var gg=el("g",{transform:"translate("+cx+","+cy+") scale(0.5)","class":"zone-hl",opacity:"0.35"});
+    gg.appendChild(el("path",{d:JERSEY,fill:c.playerFill,stroke:c.playerStroke,"stroke-width":"1.5","stroke-linejoin":"round"}));
+    var zt=el("text",{y:"6","text-anchor":"middle","dominant-baseline":"central",fill:c.playerText});
+    zt.style.cssText="font:700 12px 'DM Sans',system-ui,sans-serif;pointer-events:none;";
+    zt.textContent=prefs[i];gg.appendChild(zt);
+    if(fp)svg.insertBefore(gg,fp);else svg.appendChild(gg);
+  }
+}
+
 function drawPlayers(){
   var old=document.querySelectorAll(".player-g");for(var o=0;o<old.length;o++)old[o].remove();
   var svg=document.getElementById("field"),c=themeColors();
@@ -730,6 +824,13 @@ function drawBench(){
     nameEl.className="bench-name"+(b.name?"":" empty");
     nameEl.textContent=b.name||"Sub "+(i+1);
     slot.appendChild(nameEl);
+    /* NEW: show prefs under bench name */
+    if(b.prefs&&b.prefs.length>0){
+      var prefEl=document.createElement("div");
+      prefEl.className="bench-prefs";
+      prefEl.textContent=b.prefs.join(", ");
+      slot.appendChild(prefEl);
+    }
     row.appendChild(slot);
   }
 }
@@ -759,6 +860,9 @@ benchRowEl.addEventListener("pointermove",function(e){
     ghost.innerHTML='<svg width="50" height="50" viewBox="-26 -22 52 48" xmlns="'+NS+'"><path d="'+JERSEY+'" fill="'+c.benchFill+'" stroke="'+c.benchStroke+'" stroke-width="1.5" stroke-linejoin="round"/></svg>';
     ghost.style.display="block";
     drawBench();
+    /* NEW: show zone highlights for bench player */
+    var bp=bench[benchDragState.benchIdx];
+    if(bp&&bp.prefs&&bp.prefs.length>0)drawZoneHighlights(bp.prefs);
   }
   ghost.style.left=e.clientX+"px";ghost.style.top=e.clientY+"px";
   var target=findNearestFieldPlayer(e.clientX,e.clientY);
@@ -769,16 +873,20 @@ benchRowEl.addEventListener("pointerup",function(e){
   if(!benchDragState)return;
   e.preventDefault();
   ghost.style.display="none";
+  drawZoneHighlights(null); /* NEW: clear highlights */
   if(benchDragState.active&&benchDragState.targetFieldIdx>=0){
     var fi=benchDragState.targetFieldIdx,bii=benchDragState.benchIdx;
-    var tmp=players[fi].name;players[fi].name=bench[bii].name;bench[bii].name=tmp;
+    /* CHANGED: swap prefs too */
+    var tmpN=players[fi].name;var tmpP=players[fi].prefs||[];
+    players[fi].name=bench[bii].name;players[fi].prefs=bench[bii].prefs||[];
+    bench[bii].name=tmpN;bench[bii].prefs=tmpP;
     saveState();
   }else if(!benchDragState.active){editingIdx="b"+benchDragState.benchIdx;}
   benchDragState=null;drawAll();
 },false);
 
 benchRowEl.addEventListener("pointercancel",function(){
-  if(!benchDragState)return;ghost.style.display="none";benchDragState=null;drawAll();
+  if(!benchDragState)return;ghost.style.display="none";drawZoneHighlights(null);benchDragState=null;drawAll();
 },false);
 
 function findNearestFieldPlayer(cx,cy){
@@ -813,18 +921,45 @@ function addSection(cont,label,items,type,c){
     else{fill=c.benchFill;stroke=c.benchStroke;tf=c.benchText;rl="SUB";}
     row.innerHTML='<svg width="24" height="24" viewBox="-24 -20 48 44" xmlns="'+NS+'"><path d="'+JERSEY+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.5" stroke-linejoin="round"/><text y="8" text-anchor="middle" dominant-baseline="central" fill="'+tf+'" style="font:700 10px \'DM Sans\',system-ui,sans-serif">'+rl+'</text></svg>';
     if(isEditing){
+      /* CHANGED: editor now includes pref pills + done button */
       var inp=document.createElement("input");inp.type="text";inp.value=item.name;inp.placeholder=isField?"Player name":"Sub name";inp.maxLength=14;
-      var commit=function(){
-        if(isField)players[i].name=inp.value.trim();else bench[i].name=inp.value.trim();
+      var currentPrefs=item.prefs?item.prefs.slice():[];
+      var commitEdit=function(){
+        if(isField){players[i].name=inp.value.trim();players[i].prefs=currentPrefs;}
+        else{bench[i].name=inp.value.trim();bench[i].prefs=currentPrefs;}
         editingIdx=null;drawAll();saveState();
       };
-      inp.addEventListener("blur",commit);
-      inp.addEventListener("keydown",function(e){if(e.key==="Enter")commit();if(e.key==="Escape"){editingIdx=null;drawAll();}});
+      inp.addEventListener("keydown",function(e){if(e.key==="Enter")commitEdit();if(e.key==="Escape"){editingIdx=null;drawAll();}});
       row.appendChild(inp);
+      // Pref pills
+      var pills=document.createElement("div");pills.className="pref-pills";
+      for(var p=0;p<ALL_POSITIONS.length;p++){(function(pos){
+        var pill=document.createElement("button");pill.type="button";
+        pill.className="pref-pill"+(currentPrefs.indexOf(pos)>=0?" active":"");
+        pill.textContent=pos;
+        pill.addEventListener("click",function(ev){
+          ev.preventDefault();ev.stopPropagation();
+          var idx=currentPrefs.indexOf(pos);
+          if(idx>=0)currentPrefs.splice(idx,1);else currentPrefs.push(pos);
+          pill.className="pref-pill"+(currentPrefs.indexOf(pos)>=0?" active":"");
+        });
+        pills.appendChild(pill);
+      })(ALL_POSITIONS[p]);}
+      row.appendChild(pills);
+      // Done button
+      var done=document.createElement("button");done.type="button";done.textContent="Done";
+      done.style.cssText="margin-top:4px;padding:3px 12px;border-radius:5px;border:none;background-color:#2a3a24;background-color:var(--export-bg);color:#e0d8c8;color:var(--export-text);font:600 11px 'DM Sans',system-ui,sans-serif;cursor:pointer;";
+      done.addEventListener("click",function(ev){ev.preventDefault();ev.stopPropagation();commitEdit();});
+      row.appendChild(done);
       setTimeout(function(){inp.focus();inp.select();},50);
     }else{
       var span=document.createElement("span");span.className="roster-name "+(item.name?"filled":"empty");
       span.textContent=item.name||"Tap to name\u2026";row.appendChild(span);
+      /* NEW: show prefs inline */
+      if(item.prefs&&item.prefs.length>0){
+        var pt=document.createElement("span");pt.className="roster-prefs-display";
+        pt.textContent=item.prefs.join(", ");row.appendChild(pt);
+      }
       row.addEventListener("click",function(){editingIdx=eid;drawAll();});
     }
     list.appendChild(row);
@@ -903,8 +1038,10 @@ function drawFormationBtns(){
 
 function loadFormationByKey(key,positions){
   currentFormation=key;
+  /* CHANGED: preserve prefs when switching formations */
   var names=players.map(function(p){return p.name;});
-  players=positions.map(function(p,i){return{x:p.x,y:p.y,role:p.role,name:names[i]||""};});
+  var prefs=players.map(function(p){return p.prefs||[];});
+  players=positions.map(function(p,i){return{x:p.x,y:p.y,role:p.role,name:names[i]||"",prefs:prefs[i]||[]};});
   editingIdx=null;drawFormationBtns();drawAll();saveState();
 }
 
@@ -1000,6 +1137,9 @@ fieldEl.addEventListener("pointerdown",function(e){
   draggingFieldIdx=idx;
   fieldDragState={idx:idx,startX:players[idx].x,startY:players[idx].y,swapTarget:-1};
   g.style.cursor="grabbing";g.setPointerCapture(e.pointerId);
+  /* NEW: show zone highlights for dragged field player */
+  var p=players[idx];
+  if(p.prefs&&p.prefs.length>0)drawZoneHighlights(p.prefs);
 });
 
 fieldEl.addEventListener("pointermove",function(e){
@@ -1022,15 +1162,16 @@ fieldEl.addEventListener("pointermove",function(e){
 
 fieldEl.addEventListener("pointerup",function(e){
   if(draggingFieldIdx<0||!fieldDragState)return;
+  drawZoneHighlights(null); /* NEW: clear highlights */
   var idx=fieldDragState.idx;
   var swapTarget=fieldDragState.swapTarget;
   if(swapTarget>=0){
-    // Swap: move dragged player back to start, swap names
+    // Swap: move dragged player back to start, swap names + prefs
     players[idx].x=fieldDragState.startX;
     players[idx].y=fieldDragState.startY;
-    var tmpName=players[idx].name;
-    players[idx].name=players[swapTarget].name;
-    players[swapTarget].name=tmpName;
+    var tmpName=players[idx].name;var tmpPrefs=players[idx].prefs||[];
+    players[idx].name=players[swapTarget].name;players[idx].prefs=players[swapTarget].prefs||[];
+    players[swapTarget].name=tmpName;players[swapTarget].prefs=tmpPrefs;
   }
   // Update roles based on final positions
   updateRolesAndFormation();
@@ -1048,6 +1189,7 @@ fieldEl.addEventListener("pointercancel",function(){
     fieldDragState=null;
   }
   draggingFieldIdx=-1;
+  drawZoneHighlights(null); /* NEW */
   drawAll();
 });
 
@@ -1107,8 +1249,8 @@ function downloadBlob(blob){
 }
 
 document.getElementById("clearBtn").addEventListener("click",function(){
-  for(var i=0;i<players.length;i++)players[i].name="";
-  for(var j=0;j<bench.length;j++)bench[j].name="";
+  for(var i=0;i<players.length;i++){players[i].name="";players[i].prefs=[];} /* CHANGED: clear prefs too */
+  for(var j=0;j<bench.length;j++){bench[j].name="";bench[j].prefs=[];} /* CHANGED: clear prefs too */
   editingIdx=null;drawAll();saveState();
 });
 
