@@ -592,6 +592,81 @@ text-align: center;
 user-select: none;
 -webkit-user-select: none;
 }
+/* ── Match panel ── */
+.match-panel {
+background-color: #14200f;
+background-color: var(–bench-bg);
+border-width: 1px;
+border-style: solid;
+border-color: #3a4a34;
+border-color: var(–panel-border);
+border-radius: 10px;
+padding: 10px 12px;
+}
+.match-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 8px;
+}
+.sub-log {
+font-size: 11px;
+color: #e0d8c8;
+color: var(–text);
+line-height: 1.6;
+max-height: 150px;
+overflow-y: auto;
+}
+.sub-log-entry {
+display: flex;
+gap: 8px;
+align-items: baseline;
+}
+.sub-log-time {
+font-weight: 700;
+color: #f0c040;
+color: var(–accent);
+min-width: 40px;
+font-size: 11px;
+}
+.sub-log-detail {
+font-size: 11px;
+color: #e0d8c8;
+color: var(–text);
+}
+.sub-log-empty {
+font-size: 11px;
+color: #a89e88;
+color: var(–text-muted);
+font-style: italic;
+}
+/* ── Player stats counters ── */
+.stat-counters {
+display: flex;
+gap: 2px;
+margin-left: auto;
+flex-shrink: 0;
+}
+.stat-btn {
+padding: 1px 5px;
+border-radius: 3px;
+font-size: 9px;
+font-weight: 600;
+font-family: ‘DM Sans’, system-ui, sans-serif;
+cursor: pointer;
+border: 1px solid #3a4a34;
+border-color: var(–panel-border);
+background-color: transparent;
+color: #a89e88;
+color: var(–text-muted);
+line-height: 1.3;
+user-select: none;
+-webkit-user-select: none;
+}
+.stat-btn.has-value {
+color: #e0d8c8;
+color: var(–text);
+}
 </style>
 
 </head>
@@ -621,6 +696,18 @@ user-select: none;
       <button class="action-btn" id="rosterExportBtn">&#128228; Export</button>
       <button class="action-btn" id="rosterImportBtn">&#128229; Import</button>
       <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
+    </div>
+    <div class="match-panel" id="matchPanel">
+      <div class="match-header">
+        <span class="bench-title">Match</span>
+        <span id="matchClock" style="font-size:14px;font-weight:700;color:#e0d8c8;color:var(--text);font-family:'DM Sans',system-ui,sans-serif;">00:00</span>
+      </div>
+      <div class="actions-row" style="margin-bottom:8px">
+        <button class="action-btn" id="matchStartBtn" style="padding:5px 14px;font-size:12px;">&#9654; Start</button>
+        <button class="action-btn" id="matchEndBtn" style="padding:5px 14px;font-size:12px;" disabled>&#9632; End</button>
+        <button class="action-btn" id="matchResetBtn" style="padding:5px 14px;font-size:12px;">&#8634; Reset</button>
+      </div>
+      <div id="subLog" class="sub-log"></div>
     </div>
   </div>
   <div class="roster">
@@ -665,13 +752,21 @@ var FORMATIONS={
 
 var currentFormation="3-3-1";
 /* CHANGED: added prefs:[] to player init */
-var players=FORMATIONS["3-3-1"].map(function(p){return{x:p.x,y:p.y,role:p.role,name:"",prefs:[],available:true};});
+var players=FORMATIONS["3-3-1"].map(function(p){return{x:p.x,y:p.y,role:p.role,name:"",prefs:[],available:true,stats:{gp:0,g:0,a:0}};});
 /* CHANGED: added prefs:[] to bench init */
-var bench=[];for(var bi=0;bi<BENCH_COUNT;bi++)bench.push({name:"",role:"SUB",prefs:[],available:true});
+var bench=[];for(var bi=0;bi<BENCH_COUNT;bi++)bench.push({name:"",role:"SUB",prefs:[],available:true,stats:{gp:0,g:0,a:0}});
 var customFormations={};
 var editingIdx=null;
 var draggingFieldIdx=-1;
 var benchDragState=null;
+
+/* ── Match state ── */
+var matchActive=false;
+var matchStartTime=0;  // timestamp when started
+var matchElapsed=0;    // seconds elapsed (saved on pause/end)
+var matchClockInterval=null;
+var subLog=[];         // [{time:"12:34",playerIn:"Alex",playerOut:"Sam"}]
+var statLog=[];        // [{time:"12:34",player:"Alex",type:"g"}]
 
 function isDark(){return window.matchMedia("(prefers-color-scheme:dark)").matches;}
 function themeColors(){
@@ -716,17 +811,24 @@ function loadState(){
         x:typeof p.x==="number"?p.x:fallback[i].x,
         y:typeof p.y==="number"?p.y:fallback[i].y,
         role:p.role||fallback[i].role,name:p.name||"",
-        /* NEW */ prefs:Array.isArray(p.prefs)?p.prefs:[],
-        available:p.available!==false
+        prefs:Array.isArray(p.prefs)?p.prefs:[],
+        available:p.available!==false,
+        stats:p.stats&&typeof p.stats==="object"?{gp:p.stats.gp||0,g:p.stats.g||0,a:p.stats.a||0}:{gp:0,g:0,a:0}
       };});
     }
-    if(Array.isArray(s.bench)){bench=s.bench.slice(0,BENCH_COUNT).map(function(b){return{name:b.name||"",role:"SUB",prefs:Array.isArray(b.prefs)?b.prefs:[],available:b.available!==false};});}
-    while(bench.length<BENCH_COUNT)bench.push({name:"",role:"SUB",prefs:[],available:true});
+    if(Array.isArray(s.bench)){bench=s.bench.slice(0,BENCH_COUNT).map(function(b){var st=b.stats&&typeof b.stats==="object"?{gp:b.stats.gp||0,g:b.stats.g||0,a:b.stats.a||0}:{gp:0,g:0,a:0};return{name:b.name||"",role:"SUB",prefs:Array.isArray(b.prefs)?b.prefs:[],available:b.available!==false,stats:st};});}
+    while(bench.length<BENCH_COUNT)bench.push({name:"",role:"SUB",prefs:[],available:true,stats:{gp:0,g:0,a:0}});
+    /* Load match state */
+    if(s.matchActive)matchActive=true;
+    if(typeof s.matchElapsed==="number")matchElapsed=s.matchElapsed;
+    if(typeof s.matchStartTime==="number")matchStartTime=s.matchStartTime;
+    if(Array.isArray(s.subLog))subLog=s.subLog;
+    if(Array.isArray(s.statLog))statLog=s.statLog;
   }catch(e){}
 }
 function saveState(){
   try{
-    localStorage.setItem(STORAGE_KEY,JSON.stringify({formation:currentFormation,players:players,bench:bench}));
+    localStorage.setItem(STORAGE_KEY,JSON.stringify({formation:currentFormation,players:players,bench:bench,matchActive:matchActive,matchElapsed:matchElapsed,matchStartTime:matchStartTime,subLog:subLog,statLog:statLog}));
     var b=document.getElementById("saveBadge");b.style.opacity="1";
     setTimeout(function(){b.style.opacity="0";},1200);
   }catch(e){}
@@ -894,9 +996,17 @@ benchRowEl.addEventListener("pointerup",function(e){
   if(benchDragState.active&&benchDragState.targetFieldIdx>=0){
     var fi=benchDragState.targetFieldIdx,bii=benchDragState.benchIdx;
     /* CHANGED: swap prefs too */
-    var tmpN=players[fi].name;var tmpP=players[fi].prefs||[];var tmpA=players[fi].available!==false;
-    players[fi].name=bench[bii].name;players[fi].prefs=bench[bii].prefs||[];players[fi].available=bench[bii].available!==false;
-    bench[bii].name=tmpN;bench[bii].prefs=tmpP;bench[bii].available=tmpA;
+    var tmpN=players[fi].name;var tmpP=players[fi].prefs||[];var tmpA=players[fi].available!==false;var tmpS=players[fi].stats||{gp:0,g:0,a:0};
+    /* Log sub if match active */
+    if(matchActive){
+      var secs=getMatchSeconds();
+      var mm=String(Math.floor(secs/60));var ss=String(secs%60);
+      if(ss.length<2)ss="0"+ss;
+      subLog.push({time:mm+":"+ss,playerIn:bench[bii].name||"Sub "+(bii+1),playerOut:tmpN||"Player "+(fi+1)});
+      drawSubLog();
+    }
+    players[fi].name=bench[bii].name;players[fi].prefs=bench[bii].prefs||[];players[fi].available=bench[bii].available!==false;players[fi].stats=bench[bii].stats||{gp:0,g:0,a:0};
+    bench[bii].name=tmpN;bench[bii].prefs=tmpP;bench[bii].available=tmpA;bench[bii].stats=tmpS;
     saveState();
   }else if(!benchDragState.active){editingIdx="b"+benchDragState.benchIdx;}
   benchDragState=null;drawAll();
@@ -989,6 +1099,59 @@ function addSection(cont,label,items,type,c){
         var pt=document.createElement("span");pt.className="roster-prefs-display";
         pt.textContent=item.prefs.join(", ");row.appendChild(pt);
       }
+      /* NEW: stat counters */
+      var st=item.stats||{gp:0,g:0,a:0};
+      var statDiv=document.createElement("div");statDiv.className="stat-counters";
+      var statKeys=[{key:"gp",label:"GP"},{key:"g",label:"G"},{key:"a",label:"A"}];
+      for(var sk=0;sk<statKeys.length;sk++){(function(sk){
+        var skey=statKeys[sk].key,slabel=statKeys[sk].label;
+        var wrap=document.createElement("span");wrap.style.cssText="display:inline-flex;align-items:center;gap:0;";
+        var minus=document.createElement("button");minus.type="button";
+        minus.className="stat-btn";
+        minus.textContent="\u2212";
+        minus.style.cssText+="border-radius:3px 0 0 3px;padding:1px 3px;font-size:9px;";
+        if(st[skey]<=0)minus.style.opacity="0.25";
+        minus.addEventListener("click",function(ev){
+          ev.preventDefault();ev.stopPropagation();
+          var pName;
+          if(isField){if(!players[i].stats)players[i].stats={gp:0,g:0,a:0};if(players[i].stats[skey]>0){players[i].stats[skey]--;pName=players[i].name||"Player "+(i+1);}}
+          else{if(!bench[i].stats)bench[i].stats={gp:0,g:0,a:0};if(bench[i].stats[skey]>0){bench[i].stats[skey]--;pName=bench[i].name||"Sub "+(i+1);}}
+          if(pName&&matchActive){
+            // Remove last matching stat log entry
+            for(var si=statLog.length-1;si>=0;si--){
+              if(statLog[si].player===pName&&statLog[si].type===skey){statLog.splice(si,1);break;}
+            }
+            drawSubLog();
+          }
+          drawAll();saveState();
+        });
+        wrap.appendChild(minus);
+        var val=document.createElement("span");
+        val.className="stat-btn"+(st[skey]>0?" has-value":"");
+        val.style.cssText+="border-radius:0;border-left:none;border-right:none;padding:1px 4px;min-width:28px;text-align:center;";
+        val.textContent=slabel+":"+st[skey];
+        wrap.appendChild(val);
+        var plus=document.createElement("button");plus.type="button";
+        plus.className="stat-btn";
+        plus.textContent="+";
+        plus.style.cssText+="border-radius:0 3px 3px 0;padding:1px 3px;font-size:9px;";
+        plus.addEventListener("click",function(ev){
+          ev.preventDefault();ev.stopPropagation();
+          var pName;
+          if(isField){if(!players[i].stats)players[i].stats={gp:0,g:0,a:0};players[i].stats[skey]++;pName=players[i].name||"Player "+(i+1);}
+          else{if(!bench[i].stats)bench[i].stats={gp:0,g:0,a:0};bench[i].stats[skey]++;pName=bench[i].name||"Sub "+(i+1);}
+          if(matchActive){
+            var secs=getMatchSeconds();var mm=String(Math.floor(secs/60));var ss=String(secs%60);
+            if(ss.length<2)ss="0"+ss;
+            statLog.push({time:mm+":"+ss,player:pName,type:skey});
+            drawSubLog();
+          }
+          drawAll();saveState();
+        });
+        wrap.appendChild(plus);
+        statDiv.appendChild(wrap);
+      })(sk);}
+      row.appendChild(statDiv);
       row.addEventListener("click",function(){editingIdx=eid;drawAll();});
     }
     list.appendChild(row);
@@ -1070,7 +1233,8 @@ function loadFormationByKey(key,positions){
   var names=players.map(function(p){return p.name;});
   var prefs=players.map(function(p){return p.prefs||[];});
   var avails=players.map(function(p){return p.available!==false;});
-  players=positions.map(function(p,i){return{x:p.x,y:p.y,role:p.role,name:names[i]||"",prefs:prefs[i]||[],available:avails[i]!==false};});
+  var stats=players.map(function(p){return p.stats||{gp:0,g:0,a:0};});
+  players=positions.map(function(p,i){return{x:p.x,y:p.y,role:p.role,name:names[i]||"",prefs:prefs[i]||[],available:avails[i]!==false,stats:stats[i]||{gp:0,g:0,a:0}};});
   editingIdx=null;drawFormationBtns();drawAll();saveState();
 }
 
@@ -1198,9 +1362,9 @@ fieldEl.addEventListener("pointerup",function(e){
     // Swap: move dragged player back to start, swap names + prefs
     players[idx].x=fieldDragState.startX;
     players[idx].y=fieldDragState.startY;
-    var tmpName=players[idx].name;var tmpPrefs=players[idx].prefs||[];var tmpAvail=players[idx].available!==false;
-    players[idx].name=players[swapTarget].name;players[idx].prefs=players[swapTarget].prefs||[];players[idx].available=players[swapTarget].available!==false;
-    players[swapTarget].name=tmpName;players[swapTarget].prefs=tmpPrefs;players[swapTarget].available=tmpAvail;
+    var tmpName=players[idx].name;var tmpPrefs=players[idx].prefs||[];var tmpAvail=players[idx].available!==false;var tmpStats=players[idx].stats||{gp:0,g:0,a:0};
+    players[idx].name=players[swapTarget].name;players[idx].prefs=players[swapTarget].prefs||[];players[idx].available=players[swapTarget].available!==false;players[idx].stats=players[swapTarget].stats||{gp:0,g:0,a:0};
+    players[swapTarget].name=tmpName;players[swapTarget].prefs=tmpPrefs;players[swapTarget].available=tmpAvail;players[swapTarget].stats=tmpStats;
   }
   // Update roles based on final positions
   updateRolesAndFormation();
@@ -1278,8 +1442,8 @@ function downloadBlob(blob){
 }
 
 document.getElementById("clearBtn").addEventListener("click",function(){
-  for(var i=0;i<players.length;i++){players[i].name="";players[i].prefs=[];players[i].available=true;}
-  for(var j=0;j<bench.length;j++){bench[j].name="";bench[j].prefs=[];bench[j].available=true;}
+  for(var i=0;i<players.length;i++){players[i].name="";players[i].prefs=[];players[i].available=true;players[i].stats={gp:0,g:0,a:0};}
+  for(var j=0;j<bench.length;j++){bench[j].name="";bench[j].prefs=[];bench[j].available=true;bench[j].stats={gp:0,g:0,a:0};}
   editingIdx=null;drawAll();saveState();
 });
 
@@ -1309,8 +1473,8 @@ document.getElementById("saveNameInput").addEventListener("keydown",function(e){
 // ── Roster Export (JSON file) ──
 document.getElementById("rosterExportBtn").addEventListener("click",function(){
   var roster={
-    field:players.map(function(p){return{name:p.name,prefs:p.prefs||[]};}),
-    bench:bench.map(function(b){return{name:b.name,prefs:b.prefs||[]};})
+    field:players.map(function(p){return{name:p.name,prefs:p.prefs||[],stats:p.stats||{gp:0,g:0,a:0}};}),
+    bench:bench.map(function(b){return{name:b.name,prefs:b.prefs||[],stats:b.stats||{gp:0,g:0,a:0}};})
   };
   var json=JSON.stringify(roster,null,2);
   var blob=new Blob([json],{type:"application/json"});
@@ -1343,12 +1507,14 @@ document.getElementById("importFileInput").addEventListener("change",function(e)
         for(var i=0;i<Math.min(data.field.length,8);i++){
           players[i].name=data.field[i].name||"";
           players[i].prefs=Array.isArray(data.field[i].prefs)?data.field[i].prefs:[];
+          if(data.field[i].stats)players[i].stats={gp:data.field[i].stats.gp||0,g:data.field[i].stats.g||0,a:data.field[i].stats.a||0};
         }
       }
       if(data.bench&&Array.isArray(data.bench)){
         for(var j=0;j<Math.min(data.bench.length,BENCH_COUNT);j++){
           bench[j].name=data.bench[j].name||"";
           bench[j].prefs=Array.isArray(data.bench[j].prefs)?data.bench[j].prefs:[];
+          if(data.bench[j].stats)bench[j].stats={gp:data.bench[j].stats.gp||0,g:data.bench[j].stats.g||0,a:data.bench[j].stats.a||0};
         }
       }
       drawAll();saveState();
@@ -1360,9 +1526,104 @@ document.getElementById("importFileInput").addEventListener("change",function(e)
   e.target.value="";
 });
 
+// ── Match controls ──
+function getMatchSeconds(){
+  if(matchActive){
+    return matchElapsed+Math.floor((Date.now()-matchStartTime)/1000);
+  }
+  return matchElapsed;
+}
+
+function formatClock(secs){
+  var mm=String(Math.floor(secs/60));var ss=String(secs%60);
+  if(mm.length<2)mm="0"+mm;if(ss.length<2)ss="0"+ss;
+  return mm+":"+ss;
+}
+
+function updateClock(){
+  var el=document.getElementById("matchClock");
+  if(el)el.textContent=formatClock(getMatchSeconds());
+}
+
+function drawSubLog(){
+  var cont=document.getElementById("subLog");
+  if(!cont)return;
+  cont.innerHTML="";
+  // Merge sub and stat events into one timeline
+  var events=[];
+  for(var i=0;i<subLog.length;i++){
+    events.push({time:subLog[i].time,sort:i,kind:"sub",data:subLog[i]});
+  }
+  for(var j=0;j<statLog.length;j++){
+    events.push({time:statLog[j].time,sort:1000+j,kind:"stat",data:statLog[j]});
+  }
+  // Sort by time string then by insertion order
+  events.sort(function(a,b){if(a.time<b.time)return -1;if(a.time>b.time)return 1;return a.sort-b.sort;});
+  if(events.length===0){
+    var empty=document.createElement("div");empty.className="sub-log-empty";
+    empty.textContent=matchActive?"No events yet":"Start a match to track events";
+    cont.appendChild(empty);
+    return;
+  }
+  var statIcons={g:"\u26BD",a:"\ud83c\udfaf",gp:"\ud83d\udcca"};
+  var statLabels={g:"Goal",a:"Assist",gp:"GP"};
+  for(var k=0;k<events.length;k++){
+    var ev=events[k];
+    var entry=document.createElement("div");entry.className="sub-log-entry";
+    var timeEl=document.createElement("span");timeEl.className="sub-log-time";timeEl.textContent=ev.time;
+    var detEl=document.createElement("span");detEl.className="sub-log-detail";
+    if(ev.kind==="sub"){
+      detEl.textContent=ev.data.playerIn+" \u2192 ON, "+ev.data.playerOut+" \u2192 OFF";
+    }else{
+      detEl.textContent=(statIcons[ev.data.type]||"")+" "+(ev.data.player||"?")+" \u2014 "+(statLabels[ev.data.type]||ev.data.type);
+    }
+    entry.appendChild(timeEl);entry.appendChild(detEl);
+    cont.appendChild(entry);
+  }
+  cont.scrollTop=cont.scrollHeight;
+}
+
+function updateMatchBtns(){
+  var startBtn=document.getElementById("matchStartBtn");
+  var endBtn=document.getElementById("matchEndBtn");
+  if(matchActive){
+    startBtn.disabled=true;startBtn.style.opacity="0.4";
+    endBtn.disabled=false;endBtn.style.opacity="1";
+  }else{
+    startBtn.disabled=false;startBtn.style.opacity="1";
+    endBtn.disabled=true;endBtn.style.opacity="0.4";
+  }
+}
+
+document.getElementById("matchStartBtn").addEventListener("click",function(){
+  if(matchActive)return;
+  matchActive=true;
+  matchStartTime=Date.now();
+  matchClockInterval=setInterval(updateClock,1000);
+  updateMatchBtns();drawSubLog();saveState();
+});
+
+document.getElementById("matchEndBtn").addEventListener("click",function(){
+  if(!matchActive)return;
+  matchElapsed=getMatchSeconds();
+  matchActive=false;
+  matchStartTime=0;
+  clearInterval(matchClockInterval);matchClockInterval=null;
+  updateClock();updateMatchBtns();saveState();
+});
+
+document.getElementById("matchResetBtn").addEventListener("click",function(){
+  matchActive=false;matchElapsed=0;matchStartTime=0;subLog=[];statLog=[];
+  clearInterval(matchClockInterval);matchClockInterval=null;
+  updateClock();updateMatchBtns();drawSubLog();saveState();
+});
+
 window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",function(){drawField();drawAll();});
 
 loadCustomFormations();loadState();drawField();drawFormationBtns();drawAll();
+/* Restore match state */
+updateMatchBtns();drawSubLog();updateClock();
+if(matchActive){matchClockInterval=setInterval(updateClock,1000);}
 </script>
 
 </body>
