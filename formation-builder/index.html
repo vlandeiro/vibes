@@ -12,8 +12,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet">
 <style>
-  :root{--accent:#f0c040;--bg:#111a0e;--panel:#1a2216;--panel-border:#3a4a34;--field-border:#3a4a34;--text:#e0d8c8;--text-muted:#a89e88;--btn-bg:#2a3a24;--btn-text:#d4ccb4;--btn-active:#f0c040;--btn-active-text:#1a2216;--input-placeholder:#908870;--field-wrap-bg:#0d1a08;--bench-bg:#14200f;--bench-slot-bg:#1e2e18;--bench-slot-border:#3a4a34;--swap-hl:rgba(240,192,64,0.25);--export-bg:#2a3a24;--export-text:#e0d8c8;--export-hover:#3a5030}
-  @media(prefers-color-scheme:light){:root{--accent:#2e7d32;--bg:#f0ede6;--panel:#ffffff;--panel-border:#d0ccc0;--field-border:#c0bca8;--text:#2a2a20;--text-muted:#6a6250;--btn-bg:#e8e4d8;--btn-text:#3a3828;--btn-active:#2e7d32;--btn-active-text:#ffffff;--input-placeholder:#a09880;--field-wrap-bg:#d8e8d0;--bench-bg:#e4e0d4;--bench-slot-bg:#f5f2ea;--bench-slot-border:#c8c4b8;--swap-hl:rgba(46,125,50,0.18);--export-bg:#2e7d32;--export-text:#ffffff;--export-hover:#388e3c}}
+  :root{--accent:#f0c040;--bg:#111a0e;--panel:#1a2216;--panel-border:#3a4a34;--field-border:#3a4a34;--text:#e0d8c8;--text-muted:#a89e88;--btn-bg:#2a3a24;--btn-text:#d4ccb4;--btn-active:#f0c040;--btn-active-text:#1a2216;--input-placeholder:#908870;--field-wrap-bg:#0d1a08;--bench-bg:#14200f;--bench-slot-bg:#1e2e18;--bench-slot-border:#3a4a34;--swap-hl:rgba(240,192,64,0.25);--export-bg:#2a3a24;--export-text:#e0d8c8;--export-hover:#3a5030;--pill-bg:#1e2e18;--pill-active-bg:#f0c040;--pill-active-text:#1a2216;--pill-border:#3a4a34;}
+  @media(prefers-color-scheme:light){:root{--accent:#2e7d32;--bg:#f0ede6;--panel:#ffffff;--panel-border:#d0ccc0;--field-border:#c0bca8;--text:#2a2a20;--text-muted:#6a6250;--btn-bg:#e8e4d8;--btn-text:#3a3828;--btn-active:#2e7d32;--btn-active-text:#ffffff;--input-placeholder:#a09880;--field-wrap-bg:#d8e8d0;--bench-bg:#e4e0d4;--bench-slot-bg:#f5f2ea;--bench-slot-border:#c8c4b8;--swap-hl:rgba(46,125,50,0.18);--export-bg:#2e7d32;--export-text:#ffffff;--export-hover:#388e3c;--pill-bg:#e8e4d8;--pill-active-bg:#2e7d32;--pill-active-text:#ffffff;--pill-border:#d0ccc0;}}
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{width:100%;max-width:100%;overflow-x:hidden}
   body{background-color:#111a0e;background-color:var(--bg);font-family:'DM Sans',system-ui,-apple-system,sans-serif;color:#e0d8c8;color:var(--text);min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:20px 12px 40px}
@@ -37,7 +37,13 @@
   .field-wrap{background-color:#0d1a08;background-color:var(--field-wrap-bg);border-radius:12px;padding:8px;border:1px solid #3a4a34;border-color:var(--field-border);touch-action:none;-webkit-touch-callout:none}
   .field-wrap svg{width:100%;height:auto;display:block;border-radius:8px}
   .bench{background-color:#14200f;background-color:var(--bench-bg);border:1px solid #3a4a34;border-color:var(--panel-border);border-radius:10px;padding:10px 12px;touch-action:none;-webkit-touch-callout:none}
-  .bench-title{font-family:'Instrument Serif',Georgia,serif;font-size:14px;font-weight:400;color:#f0c040;color:var(--accent);margin-bottom:8px}
+  .bench-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .bench-header-left{display:flex;align-items:center;gap:8px}
+  .bench-title{font-family:'Instrument Serif',Georgia,serif;font-size:14px;font-weight:400;color:#f0c040;color:var(--accent)}
+  .bench-header button{font-size:10px;color:#a89e88;color:var(--text-muted);background:none;border:none;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;text-decoration:underline;text-underline-offset:2px}
+  .sort-toggle{display:flex;gap:2px}
+  .sort-toggle button{padding:2px 7px;border-radius:4px;border:1px solid #3a4a34;border-color:var(--panel-border);background-color:transparent;color:#a89e88;color:var(--text-muted);font-size:10px;font-weight:600;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;text-decoration:none!important}
+  .sort-toggle button.active{background-color:#2a3a24;background-color:var(--btn-bg);color:#e0d8c8;color:var(--text)}
   .bench-row{display:flex;gap:6px;flex-wrap:wrap}
   .bench-slot{width:58px;height:70px;border-radius:8px;background-color:#1e2e18;background-color:var(--bench-slot-bg);border:2px dashed #3a4a34;border-color:var(--bench-slot-border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none;-webkit-touch-callout:none}
   .bench-slot.dragging{opacity:.4}
@@ -45,6 +51,7 @@
   .bench-slot .bench-name{font-size:8px;font-weight:600;color:#e0d8c8;color:var(--text);margin-top:2px;max-width:54px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
   .bench-slot .bench-name.empty{color:#a89e88;color:var(--text-muted);font-style:italic}
   .bench-slot .bench-prefs{font-size:7px;color:#a89e88;color:var(--text-muted);max-width:54px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+  .bench-add{width:58px;height:70px;border-radius:8px;border:2px dashed #3a4a34;border-color:var(--bench-slot-border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;color:#a89e88;color:var(--text-muted);background:none}
   .actions-row{display:flex;gap:8px;justify-content:center}
   .action-btn{padding:8px 18px;border-radius:8px;border:none;background-color:#2a3a24;background-color:var(--export-bg);color:#e0d8c8;color:var(--export-text);font-family:'DM Sans',system-ui,sans-serif;font-size:13px;font-weight:600;cursor:pointer}
   .roster{background-color:#1a2216;background-color:var(--panel);border:1px solid #3a4a34;border-color:var(--panel-border);border-radius:12px;padding:14px;width:100%;max-width:400px}
@@ -67,10 +74,15 @@
   .roster-footer{margin-top:14px;padding-top:10px;border-top:1px solid #3a4a34;border-top-color:var(--panel-border);font-size:11px;color:#a89e88;color:var(--text-muted);line-height:1.5}
   .save-badge{display:inline-block;font-size:10px;color:#f0c040;color:var(--accent);opacity:0;margin-left:6px}
   .swap-ghost{position:fixed;pointer-events:none;z-index:9999;width:50px;height:50px;opacity:.8;transform:translate(-50%,-50%);display:none}
+  /* Pref pills in roster editor */
   .pref-pills{display:flex;flex-wrap:wrap;gap:3px;width:100%;margin-top:4px}
-  .pref-pill{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid #3a4a34;border-color:var(--panel-border);background-color:transparent;color:#a89e88;color:var(--text-muted);font-family:'DM Sans',system-ui,sans-serif}
-  .pref-pill.active{background-color:#f0c040!important;color:#1a2216!important;border-color:#f0c040!important}
-  @media(prefers-color-scheme:light){.pref-pill.active{background-color:#2e7d32!important;color:#fff!important;border-color:#2e7d32!important}}
+  .pref-pill{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid #3a4a34;border-color:var(--pill-border);background-color:transparent;background-color:var(--pill-bg);color:#a89e88;color:var(--text-muted);font-family:'DM Sans',system-ui,sans-serif}
+  .pref-pill.active{background-color:#f0c040!important;background-color:var(--pill-active-bg)!important;color:#1a2216!important;color:var(--pill-active-text)!important;border-color:#f0c040!important;border-color:var(--pill-active-bg)!important}
+  /* Bench remove button */
+  .bench-remove{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background-color:#4a2020;color:#e8a0a0;font-size:12px;font-weight:700;line-height:18px;text-align:center;cursor:pointer;border:none;font-family:system-ui,sans-serif;display:none}
+  .bench-slot:hover .bench-remove,.bench-slot:active .bench-remove{display:block}
+  @media(hover:none){.bench-remove{display:block!important}}
+  .bench-slot{position:relative}
 </style>
 </head>
 <body>
@@ -92,8 +104,12 @@
       <div class="bench-row" id="benchRow"></div>
     </div>
     <div class="actions-row">
-      <button class="action-btn" id="exportBtn">&#128247; Export as Image</button>
+      <button class="action-btn" id="exportBtn">&#128247; Image</button>
+      <button class="action-btn" id="rosterExportBtn">&#128228; Export</button>
+      <button class="action-btn" id="rosterImportBtn">&#128229; Import</button>
+      <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
     </div>
+    <div id="importMsg" style="font-size:11px;color:#a89e88;color:var(--text-muted);margin-top:4px;text-align:center;min-height:16px;max-width:400px"></div>
   </div>
   <div class="roster">
     <div class="roster-header">
@@ -110,8 +126,7 @@ var FW=380,FH=560,PR=24;
 var JERSEY="M -6 -18 L -14 -14 L -22 -8 L -18 0 L -12 -4 L -12 18 Q -12 22 -8 22 L 8 22 Q 12 22 12 18 L 12 -4 L 18 0 L 22 -8 L 14 -14 L 6 -18 Q 3 -14 0 -14 Q -3 -14 -6 -18 Z";
 var COLLAR="M -6 -18 Q -3 -12 0 -12 Q 3 -12 6 -18";
 var NS="http://www.w3.org/2000/svg";
-var STORAGE_KEY="formation_builder_v4";
-var BENCH_COUNT=5;
+var STORAGE_KEY="formation_builder_v5";
 var ALL_POSITIONS=["GK","LB","CB","RB","CDM","LM","CM","RM","CAM","LW","ST","RW"];
 
 var FORMATIONS={
@@ -123,6 +138,7 @@ var FORMATIONS={
 “2-1-2-1-1”:[{x:.5,y:.92,role:“GK”},{x:.3,y:.78,role:“CB”},{x:.7,y:.78,role:“CB”},{x:.5,y:.6,role:“CDM”},{x:.25,y:.44,role:“LM”},{x:.75,y:.44,role:“RM”},{x:.5,y:.3,role:“CAM”},{x:.5,y:.16,role:“ST”}]
 };
 
+// Zone definitions: role -> {x1,y1,x2,y2} in normalized coords
 var ZONES={
 GK:{x1:0,y1:.88,x2:1,y2:1},
 LB:{x1:0,y1:.68,x2:.3,y2:.88},CB:{x1:.3,y1:.68,x2:.7,y2:.88},RB:{x1:.7,y1:.68,x2:1,y2:.88},
@@ -132,9 +148,12 @@ CAM:{x1:.25,y1:.30,x2:.75,y2:.42},
 LW:{x1:0,y1:0,x2:.28,y2:.30},ST:{x1:.28,y1:0,x2:.72,y2:.30},RW:{x1:.72,y1:0,x2:1,y2:.30}
 };
 
+// Position order for sorting
+var POS_ORDER={GK:0,LB:1,CB:2,RB:3,CDM:4,LM:5,CM:6,RM:7,CAM:8,LW:9,ST:10,RW:11};
+
 var currentFormation=“3-3-1”;
 var players=FORMATIONS[“3-3-1”].map(function(p){return{x:p.x,y:p.y,role:p.role,name:””,prefs:[]};});
-var bench=[];for(var _b=0;_b<BENCH_COUNT;_b++)bench.push({name:””,role:“SUB”,prefs:[]});
+var bench=[];for(var _b=0;_b<5;_b++)bench.push({name:””,role:“SUB”,prefs:[]});
 var customFormations={};
 var editingIdx=null;
 var draggingFieldIdx=-1;
@@ -151,6 +170,7 @@ benchFill:d?”#8aae7a”:”#b0d4a8”,benchStroke:d?”#4a6040”:”#5a8050�
 zoneFill:d?“rgba(240,192,64,0.15)”:“rgba(46,125,50,0.12)”,zoneStroke:d?“rgba(240,192,64,0.4)”:“rgba(46,125,50,0.35)”};
 }
 
+// ── Persistence ──
 function loadCustomFormations(){try{var r=localStorage.getItem(STORAGE_KEY+”_custom”);if(r)customFormations=JSON.parse(r);}catch(e){customFormations={};}}
 function saveCustomFormations(){try{localStorage.setItem(STORAGE_KEY+”_custom”,JSON.stringify(customFormations));}catch(e){}}
 function allFormations(){var a={};var k=Object.keys(FORMATIONS);for(var i=0;i<k.length;i++)a[k[i]]=FORMATIONS[k[i]];var c=Object.keys(customFormations);for(var j=0;j<c.length;j++)a[c[j]]=customFormations[c[j]];return a;}
@@ -158,15 +178,14 @@ function allFormations(){var a={};var k=Object.keys(FORMATIONS);for(var i=0;i<k.
 function loadState(){
 try{
 var s=JSON.parse(localStorage.getItem(STORAGE_KEY));if(!s)return;
-var all=allFormations();
 if(s.formation)currentFormation=s.formation;
 if(Array.isArray(s.players)&&s.players.length===8){
-var fb=all[currentFormation]||FORMATIONS[“3-3-1”];
+var fb=allFormations()[currentFormation]||FORMATIONS[“3-3-1”];
 players=s.players.map(function(p,i){return{x:typeof p.x===“number”?p.x:fb[i].x,y:typeof p.y===“number”?p.y:fb[i].y,role:p.role||fb[i].role,name:p.name||””,prefs:Array.isArray(p.prefs)?p.prefs:[]};});
 }
 if(Array.isArray(s.bench)){
-for(var bi=0;bi<BENCH_COUNT;bi++){
-if(s.bench[bi]){bench[bi]={name:s.bench[bi].name||””,role:“SUB”,prefs:Array.isArray(s.bench[bi].prefs)?s.bench[bi].prefs:[]};}
+for(var bi=0;bi<5;bi++){
+if(s.bench[bi])bench[bi]={name:s.bench[bi].name||””,role:“SUB”,prefs:Array.isArray(s.bench[bi].prefs)?s.bench[bi].prefs:[]};
 }
 }
 }catch(e){}
@@ -179,8 +198,10 @@ var b=document.getElementById(“saveBadge”);b.style.opacity=“1”;setTimeou
 }
 var saveTimer=null;function debouncedSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveState,300);}
 
+// ── SVG helper ──
 function el(tag,attrs){var e=document.createElementNS(NS,tag);if(attrs){var k=Object.keys(attrs);for(var i=0;i<k.length;i++)e.setAttribute(k[i],String(attrs[k[i]]));}return e;}
 
+// ── Position zones ──
 function roleFromPosition(x,y){
 if(y>0.88)return”GK”;
 if(y>0.68){if(x<0.3)return”LB”;if(x>0.7)return”RB”;return”CB”;}
@@ -234,29 +255,33 @@ svg.appendChild(el(“path”,{d:“M 20 “+(FH-28)+” A 8 8 0 0 1 28 “+(FH-
 svg.appendChild(el(“path”,{d:“M “+(FW-20)+” “+(FH-28)+” A 8 8 0 0 0 “+(FW-28)+” “+(FH-20),fill:“none”,stroke:L,“stroke-width”:“1.5”}));
 }
 
-// ── Zone highlights ──
+// ── Draw zone highlights when dragging a player with prefs ──
 function drawZoneHighlights(prefs){
-var old=document.querySelectorAll(”.zone-hl”);for(var o=0;o<old.length;o++)old[o].parentNode.removeChild(old[o]);
+// Remove old
+document.querySelectorAll(”.zone-hl”).forEach(function(e){e.remove();});
 if(!prefs||prefs.length===0)return;
 var svg=document.getElementById(“field”),c=themeColors();
 for(var i=0;i<prefs.length;i++){
 var z=ZONES[prefs[i]];if(!z)continue;
 var x1=z.x1*FW,y1=z.y1*FH,w=(z.x2-z.x1)*FW,h=(z.y2-z.y1)*FH;
 var r=el(“rect”,{x:x1,y:y1,width:w,height:h,rx:6,fill:c.zoneFill,stroke:c.zoneStroke,“stroke-width”:“1.5”,“stroke-dasharray”:“6 3”,“class”:“zone-hl”});
-var fp=svg.querySelector(”.player-g”);if(fp)svg.insertBefore(r,fp);else svg.appendChild(r);
+// Insert before players
+var firstPlayer=svg.querySelector(”.player-g”);
+if(firstPlayer)svg.insertBefore(r,firstPlayer);else svg.appendChild(r);
+// Ghost jersey in zone center
 var cx=x1+w/2,cy=y1+h/2;
 var gg=el(“g”,{transform:“translate(”+cx+”,”+cy+”) scale(0.5)”,“class”:“zone-hl”,opacity:“0.35”});
 gg.appendChild(el(“path”,{d:JERSEY,fill:c.playerFill,stroke:c.playerStroke,“stroke-width”:“1.5”,“stroke-linejoin”:“round”}));
 var zt=el(“text”,{y:“6”,“text-anchor”:“middle”,“dominant-baseline”:“central”,fill:c.playerText});
 zt.style.cssText=“font:700 12px ‘DM Sans’,system-ui,sans-serif;pointer-events:none;”;
 zt.textContent=prefs[i];gg.appendChild(zt);
-if(fp)svg.insertBefore(gg,fp);else svg.appendChild(gg);
+if(firstPlayer)svg.insertBefore(gg,firstPlayer);else svg.appendChild(gg);
 }
 }
 
 // ── Draw players ──
 function drawPlayers(){
-var old=document.querySelectorAll(”.player-g”);for(var o=0;o<old.length;o++)old[o].parentNode.removeChild(old[o]);
+document.querySelectorAll(”.player-g”).forEach(function(e){e.remove();});
 var svg=document.getElementById(“field”),c=themeColors();
 var hlIdx=benchDragState&&benchDragState.active?benchDragState.targetFieldIdx:-1;
 var fhlIdx=fieldDragState?fieldDragState.swapTarget:-1;
@@ -291,11 +316,7 @@ var b=bench[i];
 var slot=document.createElement(“div”);slot.className=“bench-slot”;
 if(dragActive&&benchDragState.benchIdx===i)slot.className+=” dragging”;
 slot.setAttribute(“data-bench-idx”,i);
-var svgHtml=’<svg width="30" height="30" viewBox="-24 -20 48 44" xmlns="'+NS+'">’;
-svgHtml+=’<path d="'+JERSEY+'" fill="'+c.benchFill+'" stroke="'+c.benchStroke+'" stroke-width="1.5" stroke-linejoin="round"/>’;
-svgHtml+=’<text y="8" text-anchor="middle" dominant-baseline="central" fill="'+c.benchText+'" style="font:700 9px \'DM Sans\',system-ui,sans-serif">SUB</text>’;
-svgHtml+=’</svg>’;
-slot.innerHTML=svgHtml;
+slot.innerHTML=’<svg width="30" height="30" viewBox="-24 -20 48 44" xmlns="'+NS+'"><path d="'+JERSEY+'" fill="'+c.benchFill+'" stroke="'+c.benchStroke+'" stroke-width="1.5" stroke-linejoin="round"/><text y="8" text-anchor="middle" dominant-baseline="central" fill="'+c.benchText+'" style="font:700 9px \'DM Sans\',system-ui,sans-serif">SUB</text></svg>’;
 var nameEl=document.createElement(“div”);
 nameEl.className=“bench-name”+(b.name?””:” empty”);
 nameEl.textContent=b.name||“Sub “+(i+1);
@@ -312,7 +333,7 @@ row.appendChild(slot);
 var ghost=document.getElementById(“swapGhost”);
 var benchRowEl=document.getElementById(“benchRow”);
 benchRowEl.addEventListener(“pointerdown”,function(e){
-var slot=null;var t=e.target;while(t&&t!==this){if(t.getAttribute&&t.getAttribute(“data-bench-idx”)!==null){slot=t;break;}t=t.parentNode;}
+var slot=e.target.closest?e.target.closest(”.bench-slot”):null;
 if(!slot)return;
 e.preventDefault();e.stopPropagation();
 var idx=parseInt(slot.getAttribute(“data-bench-idx”));
@@ -327,6 +348,7 @@ if(Math.abs(dx)<6&&Math.abs(dy)<6)return;
 benchDragState.active=true;var c=themeColors();
 ghost.innerHTML=’<svg width="50" height="50" viewBox="-26 -22 52 48" xmlns="'+NS+'"><path d="'+JERSEY+'" fill="'+c.benchFill+'" stroke="'+c.benchStroke+'" stroke-width="1.5" stroke-linejoin="round"/></svg>’;
 ghost.style.display=“block”;drawBench();
+// Show zone highlights for bench player prefs
 var bp=bench[benchDragState.benchIdx];
 if(bp&&bp.prefs&&bp.prefs.length>0)drawZoneHighlights(bp.prefs);
 }
@@ -336,9 +358,10 @@ if(target!==benchDragState.targetFieldIdx){benchDragState.targetFieldIdx=target;
 },false);
 benchRowEl.addEventListener(“pointerup”,function(e){
 if(!benchDragState)return;e.preventDefault();ghost.style.display=“none”;
-drawZoneHighlights(null);
+drawZoneHighlights(null); // clear highlights
 if(benchDragState.active&&benchDragState.targetFieldIdx>=0){
 var fi=benchDragState.targetFieldIdx,bii=benchDragState.benchIdx;
+// Swap name and prefs
 var tmpN=players[fi].name,tmpP=players[fi].prefs;
 players[fi].name=bench[bii].name;players[fi].prefs=bench[bii].prefs||[];
 bench[bii].name=tmpN;bench[bii].prefs=tmpP||[];
@@ -365,29 +388,41 @@ return best;
 function drawRoster(){
 var cont=document.getElementById(“rosterContent”);cont.innerHTML=””;var c=themeColors();
 addSection(cont,“On Field”,players,“field”,c);
-addSection(cont,“Bench”,bench,“bench”,c);
+addBenchSection(cont,“Bench”,bench,c);
 }
+
 function addSection(cont,label,items,type,c){
 var lbl=document.createElement(“div”);lbl.className=“section-label”;lbl.textContent=label;cont.appendChild(lbl);
 var list=document.createElement(“div”);list.className=“roster-list”;cont.appendChild(list);
 for(var i=0;i<items.length;i++){(function(i){
-var item=items[i],isField=type===“field”,eid=(isField?“f”:“b”)+i;
+var item=items[i],eid=“f”+i;
 var row=document.createElement(“div”);var isEditing=editingIdx===eid;
 row.className=“roster-row”+(isEditing?” editing”:””);
-var isGK=isField&&item.role===“GK”;
-var fill,stroke,tf,rl;
-if(isField){fill=isGK?c.gkFill:c.playerFill;stroke=isGK?c.gkStroke:c.playerStroke;tf=c.playerText;rl=item.role;}
-else{fill=c.benchFill;stroke=c.benchStroke;tf=c.benchText;rl=“SUB”;}
-var svgHtml=’<svg width="24" height="24" viewBox="-24 -20 48 44" xmlns="'+NS+'">’;
-svgHtml+=’<path d="'+JERSEY+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.5" stroke-linejoin="round"/>’;
-svgHtml+=’<text y="8" text-anchor="middle" dominant-baseline="central" fill="'+tf+'" style="font:700 10px \'DM Sans\',system-ui,sans-serif">’+rl+’</text>’;
-svgHtml+=’</svg>’;
-row.innerHTML=svgHtml;
+var isGK=item.role===“GK”;
+var fill=isGK?c.gkFill:c.playerFill,stroke=isGK?c.gkStroke:c.playerStroke,tf=c.playerText;
+row.innerHTML=’<svg width="24" height="24" viewBox="-24 -20 48 44" xmlns="'+NS+'"><path d="'+JERSEY+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.5" stroke-linejoin="round"/><text y="8" text-anchor="middle" dominant-baseline="central" fill="'+tf+'" style="font:700 10px \'DM Sans\',system-ui,sans-serif">’+item.role+’</text></svg>’;
 if(isEditing){
-buildEditor(row,item,function(){
-if(isField)players[i]=item;else bench[i]=item;
-editingIdx=null;drawAll();saveState();
-},isField?“Player name”:“Sub name”);
+buildEditor(row,item,function(){players[i]=item;editingIdx=null;drawAll();saveState();},“Player name”);
+}else{
+var span=document.createElement(“span”);span.className=“roster-name “+(item.name?“filled”:“empty”);
+span.textContent=item.name||“Tap to name\u2026”;row.appendChild(span);
+if(item.prefs&&item.prefs.length>0){var pt=document.createElement(“span”);pt.className=“roster-prefs-display”;pt.textContent=item.prefs.join(”, “);row.appendChild(pt);}
+row.addEventListener(“click”,function(){editingIdx=eid;drawAll();});
+}
+list.appendChild(row);
+})(i);}
+}
+
+function addBenchSection(cont,label,items,c){
+var lbl=document.createElement(“div”);lbl.className=“section-label”;lbl.textContent=label;cont.appendChild(lbl);
+var list=document.createElement(“div”);list.className=“roster-list”;cont.appendChild(list);
+for(var i=0;i<items.length;i++){(function(i){
+var item=items[i],eid=“b”+i;
+var row=document.createElement(“div”);var isEditing=editingIdx===eid;
+row.className=“roster-row”+(isEditing?” editing”:””);
+row.innerHTML=’<svg width="24" height="24" viewBox="-24 -20 48 44" xmlns="'+NS+'"><path d="'+JERSEY+'" fill="'+c.benchFill+'" stroke="'+c.benchStroke+'" stroke-width="1.5" stroke-linejoin="round"/><text y="8" text-anchor="middle" dominant-baseline="central" fill="'+c.benchText+'" style="font:700 10px \'DM Sans\',system-ui,sans-serif">SUB</text></svg>’;
+if(isEditing){
+buildEditor(row,item,function(){bench[i]=item;editingIdx=null;drawAll();saveState();},“Sub name”);
 }else{
 var span=document.createElement(“span”);span.className=“roster-name “+(item.name?“filled”:“empty”);
 span.textContent=item.name||“Tap to name\u2026”;row.appendChild(span);
@@ -402,6 +437,7 @@ function buildEditor(row,item,commitFn,placeholder){
 var inp=document.createElement(“input”);inp.type=“text”;inp.value=item.name;inp.placeholder=placeholder;inp.maxLength=14;
 inp.addEventListener(“keydown”,function(e){if(e.key===“Enter”){item.name=inp.value.trim();commitFn();}if(e.key===“Escape”){editingIdx=null;drawAll();}});
 row.appendChild(inp);
+// Pref pills
 var pills=document.createElement(“div”);pills.className=“pref-pills”;
 var currentPrefs=item.prefs?item.prefs.slice():[];
 for(var p=0;p<ALL_POSITIONS.length;p++){(function(pos){
@@ -417,6 +453,7 @@ pill.className=“pref-pill”+(currentPrefs.indexOf(pos)>=0?” active”:”�
 pills.appendChild(pill);
 })(ALL_POSITIONS[p]);}
 row.appendChild(pills);
+// Done button
 var done=document.createElement(“button”);done.type=“button”;done.textContent=“Done”;
 done.style.cssText=“margin-top:4px;padding:3px 12px;border-radius:5px;border:none;background-color:#2a3a24;background-color:var(–export-bg);color:#e0d8c8;color:var(–export-text);font:600 11px ‘DM Sans’,system-ui,sans-serif;cursor:pointer;”;
 done.addEventListener(“click”,function(e){e.preventDefault();e.stopPropagation();item.name=inp.value.trim();commitFn();});
@@ -474,6 +511,7 @@ if(!g||g===fieldEl)return;e.preventDefault();
 var idx=parseInt(g.getAttribute(“data-idx”));
 draggingFieldIdx=idx;fieldDragState={idx:idx,startX:players[idx].x,startY:players[idx].y,swapTarget:-1};
 g.style.cursor=“grabbing”;g.setPointerCapture(e.pointerId);
+// Show zone highlights for dragged player’s prefs
 var p=players[idx];if(p.prefs&&p.prefs.length>0)drawZoneHighlights(p.prefs);
 });
 fieldEl.addEventListener(“pointermove”,function(e){
@@ -506,18 +544,20 @@ draggingFieldIdx=-1;drawZoneHighlights(null);drawAll();
 document.getElementById(“exportBtn”).addEventListener(“click”,function(){
 var btn=this;btn.textContent=“Generating\u2026”;btn.disabled=true;
 try{
-var benchH=95,pad=20,totalH=FH+pad+benchH;var c=themeColors();
+var benchH=bench.length>0?95:0,pad=bench.length>0?20:0,totalH=FH+pad+benchH;var c=themeColors();
 var xsvg=el(“svg”,{xmlns:NS,width:FW*2,height:totalH*2,viewBox:“0 0 “+FW+” “+totalH});
 xsvg.appendChild(el(“rect”,{width:FW,height:totalH,fill:isDark()?”#111a0e”:”#f0ede6”}));
 var fsvg=document.getElementById(“field”),fG=el(“g”);
 var nodes=fsvg.childNodes;for(var n=0;n<nodes.length;n++)fG.appendChild(nodes[n].cloneNode(true));
 xsvg.appendChild(fG);
+if(bench.length>0){
 var by=FH+pad;
 xsvg.appendChild(el(“rect”,{x:8,y:by-5,width:FW-16,height:benchH,rx:8,fill:isDark()?”#14200f”:”#e4e0d4”}));
 var bL=el(“text”,{x:18,y:by+14,fill:isDark()?”#f0c040”:”#2e7d32”});
 bL.style.cssText=“font:600 12px ‘DM Sans’,system-ui,sans-serif;”;bL.textContent=“Bench”;xsvg.appendChild(bL);
-for(var i=0;i<bench.length;i++){
-var bx=22+i*70,bpy=by+55;
+var maxB=Math.min(bench.length,5);var spacing=Math.min(70,Math.floor((FW-40)/maxB));
+for(var i=0;i<maxB;i++){
+var bx=22+i*spacing,bpy=by+55;
 var bg=el(“g”,{transform:“translate(”+bx+”,”+bpy+”) scale(0.6)”});
 bg.appendChild(el(“path”,{d:JERSEY,fill:c.benchFill,stroke:c.benchStroke,“stroke-width”:“2”,“stroke-linejoin”:“round”}));
 var brt=el(“text”,{y:“6”,“text-anchor”:“middle”,“dominant-baseline”:“central”,fill:c.benchText});
@@ -529,18 +569,19 @@ bnt.textContent=bnm.length>8?bnm.slice(0,7)+”\u2026”:bnm;xsvg.appendChild(bn
 }
 var fl=el(“text”,{x:FW-18,y:by+14,“text-anchor”:“end”,fill:isDark()?”#a89e88”:”#6a6250”});
 fl.style.cssText=“font:600 11px ‘DM Sans’,system-ui,sans-serif;”;fl.textContent=currentFormation;xsvg.appendChild(fl);
+}
 var svgStr=new XMLSerializer().serializeToString(xsvg);
 var svgBlob=new Blob([svgStr],{type:“image/svg+xml;charset=utf-8”});var url=URL.createObjectURL(svgBlob);
 var img=new Image();
 img.onload=function(){var canvas=document.createElement(“canvas”);canvas.width=FW*2;canvas.height=totalH*2;
 var ctx=canvas.getContext(“2d”);ctx.drawImage(img,0,0,FW*2,totalH*2);URL.revokeObjectURL(url);
 canvas.toBlob(function(blob){var file=new File([blob],“formation.png”,{type:“image/png”});
-if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]}))navigator.share({files:[file],title:“Formation \u2013 “+currentFormation}).catch(function(){dlBlob(blob);});
-else dlBlob(blob);btn.textContent=”\ud83d\udcf7 Export as Image”;btn.disabled=false;},“image/png”);};
+if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]}))navigator.share({files:[file],title:“Formation \u2013 “+currentFormation}).catch(function(){downloadBlob(blob);});
+else downloadBlob(blob);btn.textContent=”\ud83d\udcf7 Export as Image”;btn.disabled=false;},“image/png”);};
 img.onerror=function(){btn.textContent=”\ud83d\udcf7 Export as Image”;btn.disabled=false;};img.src=url;
 }catch(e){console.error(e);btn.textContent=”\ud83d\udcf7 Export as Image”;btn.disabled=false;}
 });
-function dlBlob(blob){var a=document.createElement(“a”);a.href=URL.createObjectURL(blob);a.download=“formation-”+currentFormation+”.png”;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},100);}
+function downloadBlob(blob){var a=document.createElement(“a”);a.href=URL.createObjectURL(blob);a.download=“formation-”+currentFormation+”.png”;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},100);}
 
 // ── Clear ──
 document.getElementById(“clearBtn”).addEventListener(“click”,function(){
@@ -557,6 +598,68 @@ customFormations[name]=players.map(function(p){return{x:p.x,y:p.y,role:p.role};}
 saveCustomFormations();currentFormation=name;saveState();drawFormationBtns();
 });
 document.getElementById(“saveNameInput”).addEventListener(“keydown”,function(e){if(e.key===“Enter”)document.getElementById(“saveFormationBtn”).click();});
+
+// ── Roster Export/Import ──
+document.getElementById(“rosterExportBtn”).addEventListener(“click”,function(){
+var roster={
+field:players.map(function(p){return{name:p.name,prefs:p.prefs||[]};}),
+bench:bench.map(function(b){return{name:b.name,prefs:b.prefs||[]};})
+};
+var json=JSON.stringify(roster,null,2);
+var blob=new Blob([json],{type:“application/json”});
+var file=new File([blob],“roster.json”,{type:“application/json”});
+if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+navigator.share({files:[file],title:“Team Roster”}).catch(function(){downloadFile(blob);});
+}else{
+downloadFile(blob);
+}
+});
+function downloadFile(blob){
+var a=document.createElement(“a”);a.href=URL.createObjectURL(blob);
+a.download=“roster.json”;document.body.appendChild(a);a.click();
+setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},100);
+}
+
+document.getElementById(“rosterImportBtn”).addEventListener(“click”,function(){
+document.getElementById(“importFileInput”).click();
+});
+document.getElementById(“importFileInput”).addEventListener(“change”,function(e){
+var file=e.target.files&&e.target.files[0];
+if(!file)return;
+var reader=new FileReader();
+reader.onload=function(ev){
+try{
+var data=JSON.parse(ev.target.result);
+if(data.field&&Array.isArray(data.field)){
+for(var i=0;i<Math.min(data.field.length,8);i++){
+players[i].name=data.field[i].name||””;
+players[i].prefs=Array.isArray(data.field[i].prefs)?data.field[i].prefs:[];
+}
+}
+if(data.bench&&Array.isArray(data.bench)){
+for(var j=0;j<Math.min(data.bench.length,5);j++){
+bench[j].name=data.bench[j].name||””;
+bench[j].prefs=Array.isArray(data.bench[j].prefs)?data.bench[j].prefs:[];
+}
+}
+drawAll();saveState();
+showImportMsg(“Roster imported!”);
+}catch(err){
+showImportMsg(“Invalid file. Make sure it’s a roster JSON.”);
+}
+};
+reader.onerror=function(){showImportMsg(“Could not read file.”);};
+reader.readAsText(file);
+// Reset input so the same file can be re-imported
+e.target.value=””;
+});
+
+function showImportMsg(msg){
+var el=document.getElementById(“importMsg”);
+if(el){el.textContent=msg;setTimeout(function(){el.textContent=””;},3000);}
+// Also flash save badge
+var b=document.getElementById(“saveBadge”);b.style.opacity=“1”;setTimeout(function(){b.style.opacity=“0”;},1200);
+}
 
 // ── Theme ──
 window.matchMedia(”(prefers-color-scheme:dark)”).addEventListener(“change”,function(){drawField();drawAll();});
