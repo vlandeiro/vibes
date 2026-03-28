@@ -534,6 +534,26 @@ color-scheme: light;
 color: #908870;
 color: var(–input-placeholder);
 }
+#jerseyColorSelect {
+padding: 5px 8px;
+border: 1px solid var(--field-border);
+border-radius: 5px;
+background-color: var(--field-wrap-bg);
+color: var(--text);
+font-family: 'DM Sans', system-ui, sans-serif;
+font-size: 13px;
+cursor: pointer;
+color-scheme: dark;
+outline: none;
+}
+@media (prefers-color-scheme: light) {
+#jerseyColorSelect {
+background-color: #f5f2ea;
+border-color: #c8c4b8;
+color: #2a2a20;
+color-scheme: light;
+}
+}
 .save-formation-row button {
 padding: 4px 12px;
 border-radius: 6px;
@@ -717,7 +737,7 @@ color: var(–text);
       <div style="display: flex; align-items: center; gap: 12px;">
         <h2>Roster</h2>
         <label for="jerseyColorSelect" style="font-size: 13px; color: var(--text-muted); font-weight: 500;">Jersey:</label>
-        <select id="jerseyColorSelect" style="padding: 5px 8px; border: 1px solid var(--field-border); border-radius: 5px; background-color: var(--field-wrap-bg); color: var(--text); font-family: 'DM Sans', system-ui, sans-serif; font-size: 13px; cursor: pointer;">
+        <select id="jerseyColorSelect">
           <option value="White">White</option>
           <option value="Red">Red</option>
           <option value="Blue">Blue</option>
