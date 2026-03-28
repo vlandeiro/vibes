@@ -851,7 +851,7 @@ function loadState(){
     var s=JSON.parse(localStorage.getItem(STORAGE_KEY));if(!s)return;
     var all=allFormations();
     if(s.formation) currentFormation=s.formation;
-    if(s.jerseyColor)jerseyColor=s.jerseyColor;
+    if(s.jerseyColor && JERSEY_COLORS[s.jerseyColor])jerseyColor=s.jerseyColor;
     if(Array.isArray(s.players)&&s.players.length===8){
       var fallback=all[currentFormation]||FORMATIONS["3-3-1"];
       players=s.players.map(function(p,i){return{
