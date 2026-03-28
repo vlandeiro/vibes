@@ -79,10 +79,8 @@ local config = {
 
   -- Status icons (SF Symbols)
   icons = {
-    idle         = "􀊰",   -- mic
-    transcribing = "􀙫",   -- waveform/gear
-    cleaning     = "􀻾",   -- pencil
-    error        = "􁙃"    -- exclamationmark.triangle
+    idle  = "􀊰",   -- mic
+    error = "􁙃"    -- exclamationmark.triangle
   }
 }
 
@@ -96,7 +94,6 @@ local iconImages       = {}
 
 -- Animation state
 local statusTimer      = nil
-local statusAnimPhase  = 0
 
 -- Logging helper
 local function logError(stage, details)
@@ -163,42 +160,10 @@ local function updateMenu()
   menuIcon:setMenu(menu)
 end
 
--- Animated Progress Bar for Transcribing/Cleaning
+-- Delegate processing animation to the active visualizer's animate() entry point
 local function animateStatusIcon()
   if whisperStatus ~= "transcribing" and whisperStatus ~= "cleaning" then return end
-
-  -- Rolling sine wave across bars: gives a "thinking" feel distinct from recording
-  statusAnimPhase = statusAnimPhase + 0.10
-
-  local num_bars = 6
-  local bar_w, gap = 3, 2
-  local w, h = 28, 22
-  local max_bar_h, min_bar_h = 16, 1
-  local startX = (w - (num_bars * bar_w + (num_bars - 1) * gap)) / 2
-  local step = (2 * math.pi) / num_bars  -- full wave spread across bars
-
-  local c = hs.canvas.new({x=0, y=0, w=w, h=h})
-  for i = 1, num_bars do
-    local sine  = (math.sin(statusAnimPhase + (i - 1) * step) + 1) / 2
-    local bar_h = min_bar_h + (max_bar_h - min_bar_h) * sine
-    c[i] = {
-      type = "rectangle",
-      fillColor = { black = 1, alpha = 1 },
-      strokeColor = { alpha = 0 },
-      roundedRectRadii = { xRadius = 1, yRadius = 1 },
-      frame = {
-        x = startX + (i - 1) * (bar_w + gap),
-        y = (h - bar_h) / 2,
-        w = bar_w,
-        h = bar_h
-      }
-    }
-  end
-
-  local img = c:imageFromCanvas()
-  c:delete()
-  img:template(true)
-  if menuIcon then menuIcon:setIcon(img) end
+  if activeVisualizer then activeVisualizer.animate() end
 end
 
 function setStatus(status)
@@ -207,13 +172,16 @@ function setStatus(status)
 
   if status == "transcribing" or status == "cleaning" then
     if not statusTimer then
-      statusAnimPhase = 0
       statusTimer = hs.timer.doEvery(0.05, animateStatusIcon)
     end
   else
     if statusTimer then
       statusTimer:stop()
       statusTimer = nil
+    end
+
+    if status == "idle" or status == "error" then
+      activeVisualizer = nil
     end
 
     if status ~= "recording" and menuIcon then
@@ -231,7 +199,7 @@ end
 --
 -- Available: "waveform" | "dynamic_island"
 
-local ACTIVE_VISUALIZER = "waveform"
+local ACTIVE_VISUALIZER = "pulse_dot"
 
 -- Shared: read microphone RMS level from the raw meter file.
 -- Returns a smoothed level in [0, 1], updating `state.level` and `state.offset`.
@@ -280,6 +248,42 @@ local function stopMeterJob(state)
   state.offset = 0
 end
 
+-- Shared: rolling sine-wave bar animation for transcribing/cleaning.
+-- Returns a stateful closure so each visualizer gets its own independent phase.
+local function makeSineWaveAnimate()
+  local phase = 0
+  local num_bars = 6
+  local bar_w, gap = 3, 2
+  local w, h = 28, 22
+  local max_bar_h, min_bar_h = 16, 1
+  local startX = (w - (num_bars * bar_w + (num_bars - 1) * gap)) / 2
+  local step = (2 * math.pi) / num_bars
+  return function()
+    phase = phase + 0.10
+    local c = hs.canvas.new({x=0, y=0, w=w, h=h})
+    for i = 1, num_bars do
+      local sine  = (math.sin(phase + (i - 1) * step) + 1) / 2
+      local bar_h = min_bar_h + (max_bar_h - min_bar_h) * sine
+      c[i] = {
+        type = "rectangle",
+        fillColor = { black = 1, alpha = 1 },
+        strokeColor = { alpha = 0 },
+        roundedRectRadii = { xRadius = 1, yRadius = 1 },
+        frame = {
+          x = startX + (i - 1) * (bar_w + gap),
+          y = (h - bar_h) / 2,
+          w = bar_w,
+          h = bar_h
+        }
+      }
+    end
+    local img = c:imageFromCanvas()
+    c:delete()
+    img:template(true)
+    if menuIcon then menuIcon:setIcon(img) end
+  end
+end
+
 -- ---- Visualizer: Waveform (original 7-bar histogram) ----
 
 local function createWaveformVisualizer()
@@ -322,9 +326,8 @@ local function createWaveformVisualizer()
       startMeterJob(state)
       state.drawTimer = hs.timer.doEvery(0.05, draw)
     end,
-    stop = function()
-      stopMeterJob(state)
-    end
+    stop    = function() stopMeterJob(state) end,
+    animate = makeSineWaveAnimate()
   }
 end
 
@@ -412,7 +415,8 @@ local function createDynamicIslandVisualizer()
     stop = function()
       stopMeterJob(state)
       bars = nil
-    end
+    end,
+    animate = makeSineWaveAnimate()
   }
 end
 
@@ -542,6 +546,65 @@ local function createFrequencyBandVisualizer()
     stop = function()
       stopMeterJob(state)
       bars = nil
+    end,
+    animate = makeSineWaveAnimate()
+  }
+end
+
+-- ---- Visualizer: Pulse Dot ----
+-- Single circle whose radius scales with the RMS audio level.
+-- Processing animation: slow breathing oscillation.
+
+local function createPulseDotVisualizer()
+  local state = { meterJob = nil, drawTimer = nil, level = 0, offset = 0 }
+  local w, h  = 22, 22
+  local cx, cy = w / 2, h / 2
+  local min_r, max_r = 2, 9
+
+  local function drawDot(r)
+    local c = hs.canvas.new({x=0, y=0, w=w, h=h})
+    c[1] = {
+      type        = "oval",
+      fillColor   = { black = 1, alpha = 1 },
+      strokeColor = { alpha = 0 },
+      frame       = { x = cx - r, y = cy - r, w = r * 2, h = r * 2 }
+    }
+    local img = c:imageFromCanvas()
+    c:delete()
+    img:template(true)
+    if menuIcon then menuIcon:setIcon(img) end
+  end
+
+  local animPhase = 0
+
+  return {
+    start = function()
+      startMeterJob(state)
+      state.drawTimer = hs.timer.doEvery(0.05, function()
+        updateAudioLevel(state)
+        drawDot(min_r + (max_r - min_r) * math.sqrt(state.level))
+      end)
+    end,
+    stop = function()
+      stopMeterJob(state)
+    end,
+    animate = function()
+      animPhase = animPhase + 0.10
+      -- Hollow ring that breathes between r=3 and r=7 (~3 second cycle)
+      local t = (math.sin(animPhase) + 1) / 2
+      local r = 3 + 4 * t
+      local c = hs.canvas.new({x=0, y=0, w=w, h=h})
+      c[1] = {
+        type        = "oval",
+        fillColor   = { alpha = 0 },
+        strokeColor = { black = 1, alpha = 1 },
+        strokeWidth = 1.5,
+        frame       = { x = cx - r, y = cy - r, w = r * 2, h = r * 2 }
+      }
+      local img = c:imageFromCanvas()
+      c:delete()
+      img:template(true)
+      if menuIcon then menuIcon:setIcon(img) end
     end
   }
 end
@@ -552,6 +615,7 @@ local visualizerFactories = {
   waveform         = createWaveformVisualizer,
   dynamic_island   = createDynamicIslandVisualizer,
   frequency_bands  = createFrequencyBandVisualizer,
+  pulse_dot        = createPulseDotVisualizer,
 }
 
 local activeVisualizer = nil
@@ -565,7 +629,8 @@ end
 local function stopVisualization()
   if activeVisualizer then
     activeVisualizer.stop()
-    activeVisualizer = nil
+    -- Keep reference: animate() is called during transcribing/cleaning.
+    -- activeVisualizer is cleared by setStatus() on idle/error.
   end
 end
 
@@ -658,7 +723,6 @@ local function appendToHistory(rawText, cleanedText, language, outputMode)
 end
 
 
--- Updated to handle outputMode directly and stream line-by-line
 local function cleanTranscription(rawText, language, outputMode, callback)
   local useEmacsMarker = recordingContext and recordingContext.emacsMarker and outputMode == "type"
 
