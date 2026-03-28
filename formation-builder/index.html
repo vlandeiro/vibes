@@ -875,7 +875,7 @@ function loadState(){
 }
 function saveState(){
   try{
-    localStorage.setItem(STORAGE_KEY,JSON.stringify({formation:currentFormation,players:players,bench:bench,matchActive:matchActive,matchElapsed:matchElapsed,matchStartTime:matchStartTime,subLog:subLog,statLog:statLog}));
+    localStorage.setItem(STORAGE_KEY,JSON.stringify({formation:currentFormation,players:players,bench:bench,jerseyColor:jerseyColor,matchActive:matchActive,matchElapsed:matchElapsed,matchStartTime:matchStartTime,subLog:subLog,statLog:statLog}));
     var b=document.getElementById("saveBadge");b.style.opacity="1";
     setTimeout(function(){b.style.opacity="0";},1200);
   }catch(e){}
