@@ -729,6 +729,16 @@ var FW=380,FH=560,PR=24;
 var JERSEY="M -6 -18 L -14 -14 L -22 -8 L -18 0 L -12 -4 L -12 18 Q -12 22 -8 22 L 8 22 Q 12 22 12 18 L 12 -4 L 18 0 L 22 -8 L 14 -14 L 6 -18 Q 3 -14 0 -14 Q -3 -14 -6 -18 Z";
 var COLLAR="M -6 -18 Q -3 -12 0 -12 Q 3 -12 6 -18";
 var NS="http://www.w3.org/2000/svg";
+var JERSEY_COLORS={
+  "White":{dark:"#e8dcc8",light:"#ffffff"},
+  "Red":{dark:"#d64545",light:"#e53935"},
+  "Blue":{dark:"#4a7ac4",light:"#1976d2"},
+  "Yellow":{dark:"#d4c040",light:"#fdd835"},
+  "Green":{dark:"#4a9a5a",light:"#43a047"},
+  "Black":{dark:"#2a2a2a",light:"#424242"},
+  "Orange":{dark:"#d4851a",light:"#fb8c00"},
+  "Purple":{dark:"#8a4ab0",light:"#7b1fa2"}
+};
 var STORAGE_KEY="formation_builder_v4";
 var BENCH_COUNT=5;
 
@@ -753,6 +763,7 @@ var FORMATIONS={
 };
 
 var currentFormation="3-3-1";
+var jerseyColor="White";
 /* CHANGED: added prefs:[] to player init */
 var players=FORMATIONS["3-3-1"].map(function(p){return{x:p.x,y:p.y,role:p.role,name:"",prefs:[],available:true,stats:{gp:0,g:0,a:0}};});
 /* CHANGED: added prefs:[] to bench init */
