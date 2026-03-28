@@ -714,7 +714,20 @@ color: var(–text);
   </div>
   <div class="roster">
     <div class="roster-header">
-      <h2>Roster</h2>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <h2>Roster</h2>
+        <label for="jerseyColorSelect" style="font-size: 13px; color: var(--text-muted); font-weight: 500;">Jersey:</label>
+        <select id="jerseyColorSelect" style="padding: 5px 8px; border: 1px solid var(--field-border); border-radius: 5px; background-color: var(--field-wrap-bg); color: var(--text); font-family: 'DM Sans', system-ui, sans-serif; font-size: 13px; cursor: pointer;">
+          <option value="White">White</option>
+          <option value="Red">Red</option>
+          <option value="Blue">Blue</option>
+          <option value="Yellow">Yellow</option>
+          <option value="Green">Green</option>
+          <option value="Black">Black</option>
+          <option value="Orange">Orange</option>
+          <option value="Purple">Purple</option>
+        </select>
+      </div>
       <button id="clearBtn">Clear all</button>
     </div>
     <div id="rosterContent"></div>
