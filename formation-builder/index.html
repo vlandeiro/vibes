@@ -1682,7 +1682,7 @@ document.getElementById("matchResetBtn").addEventListener("click",function(){
 
 window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",function(){drawField();drawAll();});
 
-loadCustomFormations();loadState();drawField();drawFormationBtns();drawAll();
+loadCustomFormations();loadState();jerseyColorSelect.value=jerseyColor;drawField();drawFormationBtns();drawAll();
 /* Restore match state */
 updateMatchBtns();drawSubLog();updateClock();
 if(matchActive){matchClockInterval=setInterval(updateClock,1000);}
