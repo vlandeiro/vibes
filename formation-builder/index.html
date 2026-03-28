@@ -1000,6 +1000,15 @@ function drawBench(){
   }
 }
 
+// Jersey color selector
+var jerseyColorSelect=document.getElementById("jerseyColorSelect");
+jerseyColorSelect.value=jerseyColor;
+jerseyColorSelect.addEventListener("change",function(e){
+  jerseyColor=e.target.value;
+  drawPlayers();
+  debouncedSave();
+});
+
 // ── Bench drag ──
 var ghost=document.getElementById("swapGhost");
 var benchRowEl=document.getElementById("benchRow");
