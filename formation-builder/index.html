@@ -947,11 +947,13 @@ function drawZoneHighlights(prefs){
 function drawPlayers(){
   var old=document.querySelectorAll(".player-g");for(var o=0;o<old.length;o++)old[o].remove();
   var svg=document.getElementById("field"),c=themeColors();
+  var isDarkMode=isDark();
+  var selectedColor=JERSEY_COLORS[jerseyColor][isDarkMode?"dark":"light"];
   var hlIdx=benchDragState&&benchDragState.active?benchDragState.targetFieldIdx:-1;
   var fieldHlIdx=fieldDragState?fieldDragState.swapTarget:-1;
   for(var i=0;i<players.length;i++){
     var p=players[i],px=p.x*FW,py=p.y*FH,isGK=p.role==="GK";
-    var fill=isGK?c.gkFill:c.playerFill,stroke=isGK?c.gkStroke:c.playerStroke;
+    var fill=isGK?c.gkFill:selectedColor,stroke=isGK?c.gkStroke:c.playerStroke;
     var g=el("g",{transform:"translate("+px+","+py+")","data-idx":i,"class":"player-g"});
     g.style.cursor="grab";
     if(!p.available)g.setAttribute("opacity","0.3");
