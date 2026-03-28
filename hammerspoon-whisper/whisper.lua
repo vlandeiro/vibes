@@ -623,25 +623,23 @@ local function emacsEval(expr)
 end
 
 -- Create an Emacs marker at point in the user's active buffer (not *server*).
--- Returns true on success.
+-- Requires whisper-hs.el to be loaded in Emacs. Returns true on success,
+-- false if the library is not loaded or emacsclient is unavailable.
 local function emacsCreateMarker()
-  local result = emacsEval('(with-current-buffer (window-buffer (selected-window)) (setq whisper--marker (copy-marker (point) t)))')
-  return result ~= nil
+  local result = emacsEval('(condition-case nil (progn (whisper-create-marker) t) (error nil))')
+  return result == "t"
 end
 
--- Insert text at the whisper marker, advancing it past the inserted text.
+-- Insert text at the whisper marker via whisper-hs.el.
 -- For vterm buffers, uses vterm-send-string instead of insert.
 local function emacsInsertAtMarker(text)
   local escaped = elispEscape(text)
-  emacsEval(string.format(
-    '(when (and (boundp (quote whisper--marker)) (markerp whisper--marker)) (with-current-buffer (marker-buffer whisper--marker) (if (derived-mode-p (quote vterm-mode)) (vterm-send-string "%s") (save-excursion (goto-char whisper--marker) (insert "%s")))))',
-    escaped, escaped
-  ))
+  emacsEval(string.format('(whisper-insert "%s")', escaped))
 end
 
 -- Delete the whisper marker to avoid leaking.
 local function emacsCleanupMarker()
-  emacsEval('(when (and (boundp (quote whisper--marker)) (markerp whisper--marker)) (set-marker whisper--marker nil) (makunbound (quote whisper--marker)))')
+  emacsEval('(whisper-cleanup)')
 end
 
 -- Clean up Emacs marker if one exists in the current recording context.
