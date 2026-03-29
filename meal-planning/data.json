@@ -84,7 +84,7 @@
       "0": {
         "lunch": "Chicken grape wrap",
         "dinner": "Roasted cauliflower chicken",
-        "snacks": "Mango semolina yogurt",
+        "snacks": "Broccoli cheddar soup",
         "lunchOut": false,
         "dinnerOut": false,
         "snacksOut": false,
@@ -94,9 +94,9 @@
         "breakfast": "Banana pancakes"
       },
       "1": {
-        "lunch": "Roasted chicken leftovers",
+        "lunch": "Roasted chicken bowl",
         "dinner": "Salmon rice spinach",
-        "snacks": "Carottes râpées",
+        "snacks": "Carottes rapees",
         "lunchOut": false,
         "dinnerOut": false,
         "snacksOut": false,
@@ -106,9 +106,9 @@
         "breakfast": "Ginger molasses granola"
       },
       "2": {
-        "lunch": "Orzo goat cheese salad",
-        "dinner": "Veggie curry",
-        "snacks": "Banana bread",
+        "lunch": "Salmon rice bowl",
+        "dinner": "Chicken with broccoli",
+        "snacks": "Mango semolina yogurt",
         "lunchOut": false,
         "dinnerOut": false,
         "snacksOut": false,
@@ -118,9 +118,9 @@
         "breakfast": "Blueberry waffles"
       },
       "3": {
-        "lunch": "Veggie curry leftovers",
-        "dinner": "Pork tenderloin veggie",
-        "snacks": "Apple slices",
+        "lunch": "Chicken broccoli leftovers",
+        "dinner": "Spinach goat lasagna",
+        "snacks": "Asian cucumbers salad",
         "lunchOut": false,
         "dinnerOut": false,
         "snacksOut": false,
@@ -130,9 +130,9 @@
         "breakfast": "Breakfast burritos"
       },
       "4": {
-        "lunch": "Chicken rice bowl",
-        "dinner": "Spinach goat lasagna",
-        "snacks": "Cucumber egg salad",
+        "lunch": "Lasagna leftovers",
+        "dinner": "Tacos",
+        "snacks": "Apple tart",
         "lunchOut": false,
         "dinnerOut": false,
         "snacksOut": false,
@@ -142,9 +142,9 @@
         "breakfast": "Poached eggs mushrooms"
       },
       "5": {
-        "lunch": "Lasagna leftovers",
-        "dinner": "Tacos",
-        "snacks": "Baked apples",
+        "lunch": "Taverna salad",
+        "dinner": "Teriyaki chicken",
+        "snacks": "Roasted peppers",
         "lunchOut": false,
         "dinnerOut": false,
         "snacksOut": false,
@@ -154,16 +154,16 @@
         "breakfast": "Buckwheat crepes"
       },
       "6": {
-        "lunch": "Taboulé",
-        "dinner": "Chicken fried rice",
-        "snacks": "Roasted peppers",
+        "lunch": "Teriyaki chicken leftovers",
+        "dinner": "Mushroom risotto",
+        "snacks": "Baked apples",
         "lunchOut": false,
         "dinnerOut": false,
         "snacksOut": false,
         "lunchLocked": false,
         "dinnerLocked": false,
         "snacksLocked": false,
-        "breakfast": "Blueberry semolina yogurts"
+        "breakfast": "Dates cheddar biscuits"
       }
     }
   },
