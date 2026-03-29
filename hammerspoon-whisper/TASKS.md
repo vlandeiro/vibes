@@ -93,7 +93,7 @@
 - [ ] **Undo Last Output**
   - Track the character count of the last typed output (including streaming chunks).
   - Bind a hotkey that programmatically sends the equivalent number of backspace keystrokes to erase it.
-- [ ] **Notification Summary**
+- [x] **Notification Summary**
   - Post an `hs.notify` with the final cleaned text after each transcription completes.
   - Allows the user to verify what was inserted without switching focus or scrolling back.
 - [ ] **Dual Output Mode (Type + Copy)**
