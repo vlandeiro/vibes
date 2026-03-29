@@ -24,7 +24,7 @@ local config = {
   whisper_url = "http://127.0.0.1:49440/inference",
   ollama_url  = "http://localhost:49450/api/generate",
   ollama_model = "qwen3.5:9b",
-  ollama_num_ctx = 8192,
+  ollama_num_ctx = 1024,
 
   -- Visual Meter Configuration
   meter_sensitivity = 80,   -- Increase if bars are too small (e.g., 300, 400)
@@ -68,7 +68,7 @@ local config = {
   },
 
   -- Logging and files
-  history_file      = os.getenv("HOME") .. "/.hammerspoon/whisper_history.txt",
+  history_file      = os.getenv("HOME") .. "/.hammerspoon/whisper_history.json",
   error_log_file    = os.getenv("HOME") .. "/.hammerspoon/whisper_error.log",
   custom_words_file = os.getenv("HOME") .. "/.hammerspoon/whisper_words.txt",
 
@@ -713,17 +713,34 @@ local function cleanupRecordingMarker()
   end
 end
 
-local function appendToHistory(rawText, cleanedText, language, outputMode)
+local function appendToHistory(rawText, cleanedText, language, outputMode, timings)
   local f = io.open(config.history_file, "a")
   if not f then return end
-  local timestamp = os.date("%Y-%m-%d %H:%M:%S")
-  f:write(string.format("[%s] [%s] [%s] [%s]\nraw: %s\nout: %s\n\n", timestamp, language, outputMode, current_mode, rawText, cleanedText))
+
+  local entry = {
+    timestamp = os.date("%Y-%m-%d %H:%M:%S"),
+    language = language,
+    output_mode = outputMode,
+    processing_mode = current_mode,
+    raw_text = rawText,
+    cleaned_text = cleanedText,
+    timings = timings or {}
+  }
+
+  local ok, jsonStr = pcall(hs.json.encode, entry)
+  if ok then
+    f:write(jsonStr .. "\n")
+  else
+    -- Fallback to plain text if JSON encoding fails
+    f:write(string.format("[%s] [%s] [%s] [%s]\nraw: %s\nout: %s\n\n", entry.timestamp, entry.language, entry.output_mode, entry.processing_mode, rawText, cleanedText))
+  end
   f:close()
 end
 
 
-local function cleanTranscription(rawText, language, outputMode, callback)
+local function cleanTranscription(rawText, language, outputMode, callback, timings)
   local useEmacsMarker = recordingContext and recordingContext.emacsMarker and outputMode == "type"
+  local cleaningStartTime = hs.timer.absoluteTime()
 
   if current_mode == "raw" then
     if outputMode == "type" then
@@ -735,7 +752,7 @@ local function cleanTranscription(rawText, language, outputMode, callback)
     elseif outputMode == "clipboard" then
       hs.pasteboard.setContents(rawText)
     end
-    callback(rawText)
+    callback(rawText, timings)
     return
   end
 
@@ -820,7 +837,10 @@ local function cleanTranscription(rawText, language, outputMode, callback)
       hs.pasteboard.setContents(fullCleanedText)
     end
 
-    callback(fullCleanedText)
+    local cleaningEndTime = hs.timer.absoluteTime()
+    timings.ollama_cleanup_ms = math.floor((cleaningEndTime - cleaningStartTime) / 1000000)
+
+    callback(fullCleanedText, timings)
   end, streamCallback, {
     "-s", "-N", "--max-time", "60", "-X", "POST", config.ollama_url,
     "-H", "Content-Type: application/json",
@@ -832,9 +852,15 @@ local function stopAndProcess(outputMode)
   -- Stop the meter job (so circle doesn't react to voice during processing)
   -- but keep visualizer reference alive for the animate() function
   if activeVisualizer then activeVisualizer.stop() end
+
+  local speechCaptureEndTime = hs.timer.absoluteTime()
   recordingJob:terminate()
   recordingJob = nil
   setStatus("transcribing")
+
+  local timings = {
+    speech_capture_ms = math.floor((speechCaptureEndTime - (recordingContext.startTime or speechCaptureEndTime)) / 1000000)
+  }
 
   hs.task.new(config.ffmpeg, function(code, stdout, stderr)
     if code ~= 0 then
@@ -863,6 +889,7 @@ local function stopAndProcess(outputMode)
       whisperCurlCmd = whisperCurlCmd .. " -F 'prompt=" .. table.concat(customWords, ", ") .. "'"
     end
 
+    local whisperStartTime = hs.timer.absoluteTime()
     hs.task.new(config.curl, function(code, stdout, stderr)
       if code ~= 0 then
         logError("Whisper API Request", stderr .. "\nReproduce with:\n" .. whisperCurlCmd)
@@ -871,17 +898,20 @@ local function stopAndProcess(outputMode)
         return
       end
 
+      local whisperEndTime = hs.timer.absoluteTime()
+      timings.whisper_transcription_ms = math.floor((whisperEndTime - whisperStartTime) / 1000000)
+
       local result = hs.json.decode(stdout)
       local text = result and result.text
       if text then
         local language = (result.detected_language or "english"):lower()
         text = text:gsub("\n", " "):gsub("\t", " "):match("^%s*(.-)%s*$")
 
-        cleanTranscription(text, language, outputMode, function(cleanedText)
-          appendToHistory(text, cleanedText, language, outputMode)
+        cleanTranscription(text, language, outputMode, function(cleanedText, finalTimings)
+          appendToHistory(text, cleanedText, language, outputMode, finalTimings)
           cleanupRecordingMarker()
           setStatus("idle")
-        end)
+        end, timings)
       else
         logError("Whisper JSON Decode", "Failed to parse response: " .. tostring(stdout))
         cleanupRecordingMarker()
@@ -909,7 +939,11 @@ local function startRecording()
   -- Now do the slower setup (emacsCreateMarker is a blocking io.popen call).
   local frontApp = hs.application.frontmostApplication()
   local isEmacs = frontApp and frontApp:name() == config.emacs_app_name
-  recordingContext = { emacsActive = isEmacs, emacsMarker = false }
+  recordingContext = {
+    emacsActive = isEmacs,
+    emacsMarker = false,
+    startTime = hs.timer.absoluteTime()
+  }
 
   if isEmacs then
     recordingContext.emacsMarker = emacsCreateMarker()
