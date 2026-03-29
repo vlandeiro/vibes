@@ -9,8 +9,8 @@
   - Update the hotkey listener logic to strictly verify `whisperStatus`.
   - Block new recording triggers if the status is `transcribing` or `cleaning` to prevent overwriting `/tmp/whisper_recording.wav` while it is still being processed.
 - [ ] **Resolve Audio Buffer Race Conditions**
-  - Modify `stopAndProcess()` to ensure `sox` has completely flushed the audio file before launching `ffmpeg`. 
-  - Implement a brief asynchronous delay or a file-size check loop to guarantee the WAV header and data are intact.
+  - Verify that `sox` has completely flushed the audio file before Whisper begins processing.
+  - Currently sox is SIGTERMed immediately before the Whisper curl task starts; in practice this is safe since sox flushes within microseconds and curl initialization takes longer.
 - [ ] **Validate Emacs Context Data**
   - Prevent stale project context by adding a validation step for `/tmp/whisper_active_emacs_project`.
   - Check the file's modification time (TTL) or query the OS to confirm Emacs is actually running before appending the project-specific custom words.
@@ -122,7 +122,7 @@
   - Allow each mode config to optionally override the default model and cascade chain.
   - For example, `casual` could use a fast small model while `email` or `notes` could target a larger or cloud model for higher quality.
 - [ ] **Startup Health Check**
-  - On Hammerspoon load, asynchronously verify that sox, ffmpeg, the Whisper endpoint, and the primary Ollama model all respond.
+  - On Hammerspoon load, asynchronously verify that sox, the Whisper endpoint, and the primary Ollama model all respond.
   - Post a single `hs.notify` warning listing any unreachable services, rather than failing silently mid-recording.
 - [ ] **Retry with Backoff**
   - Before advancing to the next model in the cascade, retry the current model once after a short delay.

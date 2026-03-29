@@ -5,7 +5,7 @@ A macOS voice dictation tool built on [Hammerspoon](https://www.hammerspoon.org/
 ## How It Works
 
 1. Press the hotkey to start recording. A waveform icon appears in the menu bar.
-2. Press the hotkey again to stop. The audio is sped up via ffmpeg and sent to a local Whisper server for transcription.
+2. Press the hotkey again to stop. The audio is sent directly to a local Whisper server for transcription.
 3. The raw transcript is passed to Ollama with a mode-specific system prompt (or left raw).
 4. The result is typed at the cursor or copied to the clipboard.
 
@@ -16,10 +16,10 @@ Install the following before proceeding:
 - [Hammerspoon](https://www.hammerspoon.org/) — macOS automation framework
 - [Ollama](https://ollama.com/) — local LLM server
 - [whisper.cpp](https://github.com/ggerganov/whisper.cpp) — local speech-to-text server (the `whisper-server` binary)
-- `sox` and `ffmpeg` via Homebrew:
+- `sox` via Homebrew:
 
 ```sh
-brew install sox ffmpeg
+brew install sox
 ```
 
 ### Models
