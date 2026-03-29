@@ -182,7 +182,7 @@ async function callOpenAI(prompt) {
     },
     body: JSON.stringify({
       model: model,
-      max_tokens: 1024,
+      max_completion_tokens: 1024,
       messages: [
         { role: 'system', content: prompt.system },
         { role: 'user', content: prompt.user }
