@@ -88,7 +88,7 @@
         "lunchOut": true,
         "dinnerOut": false,
         "snacksOut": false,
-        "lunchLocked": false,
+        "lunchLocked": true,
         "dinnerLocked": false,
         "snacksLocked": false,
         "breakfast": "Banana pancakes"
