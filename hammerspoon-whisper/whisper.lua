@@ -902,6 +902,11 @@ local function stopAndProcess(outputMode)
       cleanTranscription(text, language, outputMode, function(cleanedText, finalTimings)
         appendToHistory(text, cleanedText, language, outputMode, finalTimings, config.whisper_model, config.ollama_model)
         cleanupRecordingMarker()
+        hs.notify.new({
+          title = "Whisper",
+          informativeText = cleanedText,
+          withdrawAfter = 5
+        }):send()
         setStatus("idle")
       end, timings)
     else
