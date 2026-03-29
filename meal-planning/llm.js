@@ -1,6 +1,34 @@
 // llm.js — LLM provider abstraction for meal plan generation
 // Supports Anthropic (Claude) and OpenAI (ChatGPT)
 
+// ── Model listing ────────────────────────────────────────────────────────────
+
+async function fetchModels(provider, key) {
+  if (provider === 'openai') {
+    var resp = await fetch('https://api.openai.com/v1/models', {
+      headers: { 'Authorization': 'Bearer ' + key }
+    });
+    if (!resp.ok) throw new Error('OpenAI API error ' + resp.status);
+    var json = await resp.json();
+    return json.data
+      .map(function (m) { return m.id; })
+      .filter(function (id) { return /^(gpt-|o1|o3|chatgpt-4)/.test(id); })
+      .sort()
+      .reverse();
+  } else {
+    var resp = await fetch('https://api.anthropic.com/v1/models', {
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-calls': 'true'
+      }
+    });
+    if (!resp.ok) throw new Error('Anthropic API error ' + resp.status);
+    var json = await resp.json();
+    return json.data.map(function (m) { return m.id; }).reverse();
+  }
+}
+
 var DEFAULT_MODELS = {
   anthropic: 'claude-opus-4-6',
   openai: 'gpt-4o'
@@ -20,7 +48,7 @@ function buildPrompt(weekKey, refinementNote) {
     'Your job is to plan a week of meals (lunch, dinner, and snacks) for a family.',
     'Always respond with ONLY a valid JSON object — no markdown, no explanation.',
     'The JSON must have keys "0" through "6" (Monday=0, Sunday=6).',
-    'Each day has keys: "lunch", "dinner", "snacks" (all strings).',
+    'Each day has keys: "breakfast", "lunch", "dinner", "snacks" (all strings).',
     'Use short meal names (2-5 words). Leave a field empty string "" if a meal is locked.'
   ].join(' ');
 
@@ -52,7 +80,7 @@ function buildPrompt(weekKey, refinementNote) {
 
   lines.push('');
   lines.push('Respond with ONLY the JSON object. Example:');
-  lines.push('{"0":{"lunch":"Pasta Bolognese","dinner":"Chicken Stir-fry","snacks":"Apple slices"},"1":{...},...,"6":{...}}');
+  lines.push('{"0":{"breakfast":"Oatmeal","lunch":"Pasta Bolognese","dinner":"Chicken Stir-fry","snacks":"Apple slices"},"1":{...},...,"6":{...}}');
 
   return { system: systemPrompt, user: lines.join('\n') };
 }
@@ -63,7 +91,7 @@ function getLockedMealsDescription(weekKey) {
   var days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   for (var d = 0; d < 7; d++) {
     var day = week[String(d)] || {};
-    ['lunch', 'dinner', 'snacks'].forEach(function (meal) {
+    ['breakfast', 'lunch', 'dinner', 'snacks'].forEach(function (meal) {
       if (day[meal + 'Locked'] && day[meal]) {
         lines.push(days[d] + ' ' + meal + ': ' + day[meal]);
       }

@@ -17,9 +17,10 @@ var state = {
     githubRepo: 'vlandeiro/vibes',
     githubPath: 'meal-planning/data.json',
     mealTimes: {
-      lunch:  { start: '12:00', end: '13:00' },
-      dinner: { start: '18:00', end: '19:00' },
-      snacks: { start: '15:00', end: '15:30' }
+      breakfast: { start: '08:00', end: '08:30' },
+      lunch:     { start: '12:00', end: '13:00' },
+      dinner:    { start: '18:00', end: '19:00' },
+      snacks:    { start: '15:00', end: '15:30' }
     }
   }
 };
@@ -118,9 +119,9 @@ function ensureWeek(weekKey) {
     var k = String(d);
     if (!state.weeks[weekKey][k]) {
       state.weeks[weekKey][k] = {
-        lunch: '', dinner: '', snacks: '',
-        lunchOut: false, dinnerOut: false, snacksOut: false,
-        lunchLocked: false, dinnerLocked: false, snacksLocked: false
+        breakfast: '', lunch: '', dinner: '', snacks: '',
+        breakfastOut: false, lunchOut: false, dinnerOut: false, snacksOut: false,
+        breakfastLocked: false, lunchLocked: false, dinnerLocked: false, snacksLocked: false
       };
     }
   }
@@ -142,9 +143,9 @@ function switchView(name) {
 // ── Planner rendering ─────────────────────────────────────────────────────────
 
 var DAY_NAMES  = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-var MEALS      = ['lunch', 'dinner', 'snacks'];
-var MEAL_LABELS = { lunch: 'Lunch', dinner: 'Dinner', snacks: 'Snacks' };
-var MEAL_PLACEHOLDERS = { lunch: 'Add lunch…', dinner: 'Add dinner…', snacks: 'Add snacks…' };
+var MEALS      = ['breakfast', 'lunch', 'dinner', 'snacks'];
+var MEAL_LABELS = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snacks: 'Snacks' };
+var MEAL_PLACEHOLDERS = { breakfast: 'Add breakfast…', lunch: 'Add lunch…', dinner: 'Add dinner…', snacks: 'Add snacks…' };
 
 function renderPlanner() {
   document.getElementById('weekLabel').textContent = formatWeekLabel(state.currentWeekKey);
@@ -385,7 +386,7 @@ function renderSettings() {
   document.getElementById('settingsPreferences').value = state.preferences || '';
 
   var mt = s.mealTimes || {};
-  ['lunch', 'dinner', 'snacks'].forEach(function (meal) {
+  ['breakfast', 'lunch', 'dinner', 'snacks'].forEach(function (meal) {
     var t = mt[meal] || {};
     var startEl = document.getElementById(meal + 'Start');
     var endEl   = document.getElementById(meal + 'End');
@@ -393,27 +394,80 @@ function renderSettings() {
     if (endEl)   endEl.value   = t.end   || '';
   });
 
-  // Update model placeholder based on provider
-  updateModelPlaceholder();
+  // Restore saved model in dropdown (may be a single saved option)
+  populateModelSelectWithSaved(s.llmModel);
 }
 
-function updateModelPlaceholder() {
+// Ensure the saved model value appears in the select (as a single option if not loaded)
+function populateModelSelectWithSaved(savedModel) {
+  var sel = document.getElementById('settingsModel');
+  if (!savedModel) return;
+  // If the option is already present, just select it
+  for (var i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value === savedModel) { sel.value = savedModel; return; }
+  }
+  // Otherwise add it as the only option
+  sel.innerHTML = '';
+  var opt = document.createElement('option');
+  opt.value = savedModel;
+  opt.textContent = savedModel;
+  sel.appendChild(opt);
+  sel.value = savedModel;
+}
+
+// Called when provider changes — reset dropdown to hint state
+function onProviderChange() {
   var provider = document.getElementById('settingsProvider').value;
-  var modelInput = document.getElementById('settingsModel');
-  modelInput.placeholder = provider === 'openai' ? 'gpt-4o' : 'claude-opus-4-6';
+  var sel = document.getElementById('settingsModel');
+  var defaultModel = provider === 'openai' ? 'gpt-4o' : 'claude-opus-4-6';
+  sel.innerHTML = '<option value="">— enter API key then click Load —</option>';
+  populateModelSelectWithSaved(defaultModel);
+}
+
+async function loadAvailableModels() {
+  var key      = document.getElementById('settingsLlmKey').value.trim();
+  var provider = document.getElementById('settingsProvider').value;
+  if (!key) { alert('Enter an API key first.'); return; }
+
+  var btn = document.getElementById('btnLoadModels');
+  btn.textContent = '…';
+  btn.disabled = true;
+
+  try {
+    var models = await fetchModels(provider, key);
+    var sel = document.getElementById('settingsModel');
+    var current = sel.value || state.settings.llmModel;
+    sel.innerHTML = '';
+    models.forEach(function (id) {
+      var opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = id;
+      sel.appendChild(opt);
+    });
+    // Re-select current if still in list, otherwise pick first
+    if (current) {
+      sel.value = current;
+      if (!sel.value && sel.options.length) sel.value = sel.options[0].value;
+    }
+  } catch (e) {
+    alert('Failed to load models: ' + e.message);
+  } finally {
+    btn.textContent = 'Load';
+    btn.disabled = false;
+  }
 }
 
 function saveSettings() {
   var s = state.settings;
   s.llmProvider  = document.getElementById('settingsProvider').value;
-  s.llmModel     = document.getElementById('settingsModel').value.trim();
+  s.llmModel     = document.getElementById('settingsModel').value;
   s.llmKey       = document.getElementById('settingsLlmKey').value.trim();
   s.githubPat    = document.getElementById('settingsGithubPat').value.trim();
   s.githubRepo   = document.getElementById('settingsGithubRepo').value.trim();
   s.githubPath   = document.getElementById('settingsGithubPath').value.trim();
   state.preferences = document.getElementById('settingsPreferences').value;
 
-  ['lunch', 'dinner', 'snacks'].forEach(function (meal) {
+  ['breakfast', 'lunch', 'dinner', 'snacks'].forEach(function (meal) {
     s.mealTimes[meal] = {
       start: document.getElementById(meal + 'Start').value,
       end:   document.getElementById(meal + 'End').value
@@ -547,7 +601,8 @@ async function init() {
   });
 
   // Settings
-  document.getElementById('settingsProvider').addEventListener('change', updateModelPlaceholder);
+  document.getElementById('settingsProvider').addEventListener('change', onProviderChange);
+  document.getElementById('btnLoadModels').addEventListener('click', loadAvailableModels);
   document.getElementById('btnSaveSettings').addEventListener('click', saveSettings);
 }
 

@@ -22,6 +22,8 @@
   --border:       #4a3820;
   --accent:       #f5a623;
   --accent-dim:   rgba(245,166,35,.12);
+  --breakfast:    #3a9fd4;
+  --breakfast-dim:rgba(58,159,212,.13);
   --lunch:        #e8543a;
   --lunch-dim:    rgba(232,84,58,.13);
   --dinner:       #7c4dbb;
@@ -52,6 +54,8 @@
     --border:       #e0cdb0;
     --accent:       #d4870a;
     --accent-dim:   rgba(212,135,10,.10);
+    --breakfast:    #1a7fb0;
+    --breakfast-dim:rgba(26,127,176,.10);
     --lunch:        #c8402a;
     --lunch-dim:    rgba(200,64,42,.10);
     --dinner:       #6030a0;
@@ -286,7 +290,7 @@ body {
 .meal-slots {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
 }
 
 .meal-slot {
@@ -303,9 +307,10 @@ body {
   border-right: 1px solid var(--border);
 }
 
-.meal-slot[data-meal="lunch"]  { border-left-color: var(--lunch); background: var(--lunch-dim); }
-.meal-slot[data-meal="dinner"] { border-left-color: var(--dinner); background: var(--dinner-dim); }
-.meal-slot[data-meal="snacks"] { border-left-color: var(--snacks); background: var(--snacks-dim); }
+.meal-slot[data-meal="breakfast"] { border-left-color: var(--breakfast); background: var(--breakfast-dim); }
+.meal-slot[data-meal="lunch"]     { border-left-color: var(--lunch); background: var(--lunch-dim); }
+.meal-slot[data-meal="dinner"]    { border-left-color: var(--dinner); background: var(--dinner-dim); }
+.meal-slot[data-meal="snacks"]    { border-left-color: var(--snacks); background: var(--snacks-dim); }
 
 .meal-slot.is-locked { background: var(--locked-bg) !important; }
 .meal-slot.is-locked .meal-slot-label { opacity: 0.7; }
@@ -324,9 +329,10 @@ body {
   letter-spacing: 0.6px;
 }
 
-.meal-slot[data-meal="lunch"]  .meal-slot-label { color: var(--lunch); }
-.meal-slot[data-meal="dinner"] .meal-slot-label { color: var(--dinner); }
-.meal-slot[data-meal="snacks"] .meal-slot-label { color: var(--snacks); }
+.meal-slot[data-meal="breakfast"] .meal-slot-label { color: var(--breakfast); }
+.meal-slot[data-meal="lunch"]     .meal-slot-label { color: var(--lunch); }
+.meal-slot[data-meal="dinner"]    .meal-slot-label { color: var(--dinner); }
+.meal-slot[data-meal="snacks"]    .meal-slot-label { color: var(--snacks); }
 
 .slot-icons {
   display: flex;
@@ -396,14 +402,22 @@ body {
   padding-top: 12px;
 }
 
+/* Tablet: 2-column meal slots */
+@media (max-width: 720px) {
+  .meal-slots { grid-template-columns: repeat(2, 1fr); }
+  .meal-slot:nth-child(odd):not(:last-child) { border-right: 1px solid var(--border); }
+  .meal-slot:nth-child(even) { border-right: none; }
+  .meal-slot:nth-child(-n+2) { border-bottom: 1px solid var(--border); }
+}
+
 /* Mobile: stack meal slots vertically */
-@media (max-width: 560px) {
+@media (max-width: 480px) {
   .meal-slots { grid-template-columns: 1fr; }
   .meal-slot:not(:last-child) {
     border-right: none;
     border-bottom: 1px solid var(--border);
   }
-  .day-label { width: 56px; min-width: 56px; }
+  .day-label { width: 52px; min-width: 52px; }
 }
 
 /* ─────────────────────────────────────────
@@ -582,11 +596,15 @@ body {
 
 .meal-times-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 600px) {
+  .meal-times-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 360px) {
   .meal-times-grid { grid-template-columns: 1fr; }
 }
 
@@ -605,9 +623,17 @@ body {
   margin-bottom: 8px;
 }
 
-.meal-time-card[data-meal="lunch"]  .meal-time-card-label { color: var(--lunch); }
-.meal-time-card[data-meal="dinner"] .meal-time-card-label { color: var(--dinner); }
-.meal-time-card[data-meal="snacks"] .meal-time-card-label { color: var(--snacks); }
+.meal-time-card[data-meal="breakfast"] .meal-time-card-label { color: var(--breakfast); }
+.meal-time-card[data-meal="lunch"]     .meal-time-card-label { color: var(--lunch); }
+.meal-time-card[data-meal="dinner"]    .meal-time-card-label { color: var(--dinner); }
+.meal-time-card[data-meal="snacks"]    .meal-time-card-label { color: var(--snacks); }
+
+.model-select-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.model-select-row .field-select { flex: 1; }
 
 .time-row {
   display: flex;
@@ -740,7 +766,12 @@ body {
       </div>
       <div class="field-row">
         <label class="field-label" for="settingsModel">Model</label>
-        <input class="field-input" id="settingsModel" type="text" placeholder="claude-opus-4-6">
+        <div class="model-select-row">
+          <select class="field-select" id="settingsModel">
+            <option value="">— enter API key then click Load —</option>
+          </select>
+          <button class="btn" id="btnLoadModels">Load</button>
+        </div>
       </div>
       <div class="field-row">
         <label class="field-label" for="settingsLlmKey">API Key</label>
@@ -776,6 +807,17 @@ body {
     <div class="settings-section">
       <div class="settings-section-title">Meal Times (for calendar export)</div>
       <div class="meal-times-grid">
+        <div class="meal-time-card" data-meal="breakfast">
+          <div class="meal-time-card-label">Breakfast</div>
+          <div class="time-row">
+            <div class="time-row-label">Start</div>
+            <input class="time-input" type="time" id="breakfastStart" value="08:00">
+          </div>
+          <div class="time-row">
+            <div class="time-row-label">End</div>
+            <input class="time-input" type="time" id="breakfastEnd" value="08:30">
+          </div>
+        </div>
         <div class="meal-time-card" data-meal="lunch">
           <div class="meal-time-card-label">Lunch</div>
           <div class="time-row">
