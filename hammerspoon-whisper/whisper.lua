@@ -18,9 +18,10 @@ local config = {
   meter_raw_file = "/tmp/whisper_meter.raw",
 
   -- Audio processing
-  whisper_url = "http://127.0.0.1:49440/inference",
-  ollama_url  = "http://localhost:49450/api/generate",
-  ollama_model = "qwen3.5:9b",
+  whisper_url   = "http://127.0.0.1:49440/inference",
+  whisper_model = "large-v3-turbo",
+  ollama_url    = "http://localhost:49450/api/generate",
+  ollama_model  = "qwen3.5:9b",
   ollama_num_ctx = 1024,
 
   -- Visual Meter Configuration
@@ -710,7 +711,7 @@ local function cleanupRecordingMarker()
   end
 end
 
-local function appendToHistory(rawText, cleanedText, language, outputMode, timings)
+local function appendToHistory(rawText, cleanedText, language, outputMode, timings, whisperModel, ollamaModel)
   local f = io.open(config.history_file, "a")
   if not f then return end
 
@@ -719,6 +720,8 @@ local function appendToHistory(rawText, cleanedText, language, outputMode, timin
     language = language,
     output_mode = outputMode,
     processing_mode = current_mode,
+    whisper_model = whisperModel or config.whisper_model,
+    ollama_model = ollamaModel or config.ollama_model,
     raw_text = rawText,
     cleaned_text = cleanedText,
     timings = timings or {}
@@ -897,7 +900,7 @@ local function stopAndProcess(outputMode)
       text = text:gsub("\n", " "):gsub("\t", " "):match("^%s*(.-)%s*$")
 
       cleanTranscription(text, language, outputMode, function(cleanedText, finalTimings)
-        appendToHistory(text, cleanedText, language, outputMode, finalTimings)
+        appendToHistory(text, cleanedText, language, outputMode, finalTimings, config.whisper_model, config.ollama_model)
         cleanupRecordingMarker()
         setStatus("idle")
       end, timings)
