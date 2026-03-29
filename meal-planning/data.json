@@ -85,7 +85,7 @@
         "lunch": "Chicken grape wrap",
         "dinner": "Roasted cauliflower chicken",
         "snacks": "Mango semolina yogurt",
-        "lunchOut": false,
+        "lunchOut": true,
         "dinnerOut": false,
         "snacksOut": false,
         "lunchLocked": false,
