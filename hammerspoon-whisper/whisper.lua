@@ -94,6 +94,7 @@ local iconImages       = {}
 
 -- Animation state
 local statusTimer      = nil
+local activeVisualizer = nil
 
 -- Logging helper
 local function logError(stage, details)
@@ -222,9 +223,9 @@ local function updateAudioLevel(state)
     if rms < config.meter_noise_gate then rms = 0 end
     local target = math.min(1.0, rms * config.meter_sensitivity)
     if target > state.level then
-      state.level = state.level * 0.1 + target * 0.9
+      state.level = state.level * 0.3 + target * 0.7
     else
-      state.level = state.level * 0.7 + target * 0.3
+      state.level = state.level * 0.85 + target * 0.15
     end
   end
 end
@@ -590,9 +591,9 @@ local function createPulseDotVisualizer()
     end,
     animate = function()
       animPhase = animPhase + 0.10
-      -- Hollow ring that breathes between r=3 and r=7 (~3 second cycle)
+      -- Hollow ring that breathes between r=1 and r=9 (~3 second cycle)
       local t = (math.sin(animPhase) + 1) / 2
-      local r = 3 + 4 * t
+      local r = 1 + 8 * t
       local c = hs.canvas.new({x=0, y=0, w=w, h=h})
       c[1] = {
         type        = "oval",
@@ -617,8 +618,6 @@ local visualizerFactories = {
   frequency_bands  = createFrequencyBandVisualizer,
   pulse_dot        = createPulseDotVisualizer,
 }
-
-local activeVisualizer = nil
 
 local function startVisualization()
   local factory = visualizerFactories[ACTIVE_VISUALIZER] or visualizerFactories.waveform
@@ -830,7 +829,9 @@ local function cleanTranscription(rawText, language, outputMode, callback)
 end
 
 local function stopAndProcess(outputMode)
-  stopVisualization()
+  -- Stop the meter job (so circle doesn't react to voice during processing)
+  -- but keep visualizer reference alive for the animate() function
+  if activeVisualizer then activeVisualizer.stop() end
   recordingJob:terminate()
   recordingJob = nil
   setStatus("transcribing")
