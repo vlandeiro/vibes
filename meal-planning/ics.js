@@ -4,13 +4,14 @@ function generateICS(weekKey) {
   var monday = getMondayOfWeek(weekKey);
   var week = state.weeks[weekKey] || {};
   var times = state.settings.mealTimes || {};
-  var mealOrder = ['lunch', 'dinner', 'snacks'];
-  var mealLabels = { lunch: 'Lunch', dinner: 'Dinner', snacks: 'Snacks' };
+  var mealOrder = ['breakfast', 'lunch', 'dinner', 'snacks'];
+  var mealLabels = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snacks: 'Snacks' };
 
   var defaultTimes = {
-    lunch:  { start: '12:00', end: '13:00' },
-    dinner: { start: '18:00', end: '19:00' },
-    snacks: { start: '15:00', end: '15:30' }
+    breakfast: { start: '08:00', end: '08:30' },
+    lunch:     { start: '12:00', end: '13:00' },
+    dinner:    { start: '18:00', end: '19:00' },
+    snacks:    { start: '15:00', end: '15:30' }
   };
 
   var events = [];
