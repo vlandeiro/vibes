@@ -33,9 +33,8 @@ In `vterm-mode' buffers, uses `vterm-send-string' instead."
     (with-current-buffer (marker-buffer whisper-hs--marker)
       (if (derived-mode-p 'vterm-mode)
           (vterm-send-string text)
-        (save-excursion
-          (goto-char whisper-hs--marker)
-          (insert text))))))
+        (goto-char whisper-hs--marker)
+        (insert text)))))
 
 (defun whisper-cleanup ()
   "Release the whisper marker."

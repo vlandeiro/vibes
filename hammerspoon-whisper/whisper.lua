@@ -21,7 +21,7 @@ local config = {
   whisper_url   = "http://127.0.0.1:49440/inference",
   whisper_model = "large-v3-turbo",
   ollama_url    = "http://localhost:49450/api/generate",
-  ollama_model  = "qwen3.5:9b",
+  ollama_model  = "qwen3.5:4b",
   ollama_num_ctx = 1024,
 
   -- Visual Meter Configuration
