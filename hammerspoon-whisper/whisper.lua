@@ -83,7 +83,7 @@ local config = {
 }
 
 -- State management
-local current_mode     = "casual"
+local current_mode     = "raw"
 local recordingJob     = nil
 local recordingContext = nil
 local whisperStatus    = "idle"
@@ -854,67 +854,81 @@ local function stopAndProcess(outputMode)
   if activeVisualizer then activeVisualizer.stop() end
 
   local speechCaptureEndTime = hs.timer.absoluteTime()
-  recordingJob:terminate()
-  recordingJob = nil
   setStatus("transcribing")
 
-  local timings = {
-    speech_capture_ms = math.floor((speechCaptureEndTime - (recordingContext.startTime or speechCaptureEndTime)) / 1000000)
-  }
+  -- Replace the sox callback so that when it exits (after terminate()),
+  -- we know the WAV file is fully finalized before sending it to whisper.
+  -- Without this, curl may read the file before sox writes the final WAV
+  -- header, causing whisper to see an enormous implied duration and hang.
+  recordingJob:setCallback(function(exitCode, stdout, stderr)
+    recordingJob = nil
 
-  local customWords = loadCustomWords()
-  local curlArgs = {
-    "-s", "--max-time", "60", "-X", "POST", config.whisper_url,
-    "-F", "file=@" .. config.recording_file,
-    "-F", "response_format=verbose_json"
-  }
-  if #customWords > 0 then
-    table.insert(curlArgs, "-F")
-    table.insert(curlArgs, "prompt=" .. table.concat(customWords, ", "))
-  end
-
-  -- Build reproducible curl command for debugging
-  local whisperCurlCmd = "curl -s --max-time 60 -X POST " .. config.whisper_url
-    .. " -F 'file=@" .. config.recording_file .. "'"
-    .. " -F 'response_format=verbose_json'"
-  if #customWords > 0 then
-    whisperCurlCmd = whisperCurlCmd .. " -F 'prompt=" .. table.concat(customWords, ", ") .. "'"
-  end
-
-  local whisperStartTime = hs.timer.absoluteTime()
-  hs.task.new(config.curl, function(code, stdout, stderr)
-    if code ~= 0 then
-      logError("Whisper API Request", stderr .. "\nReproduce with:\n" .. whisperCurlCmd)
+    if exitCode ~= 0 and exitCode ~= -15 and exitCode ~= 143 then -- SIGTERM expected
+      logError("Sox Recording", stderr)
       cleanupRecordingMarker()
       setStatus("error")
       return
     end
 
-    local whisperEndTime = hs.timer.absoluteTime()
-    timings.whisper_transcription_ms = math.floor((whisperEndTime - whisperStartTime) / 1000000)
+    local timings = {
+      speech_capture_ms = math.floor((speechCaptureEndTime - (recordingContext.startTime or speechCaptureEndTime)) / 1000000)
+    }
 
-    local result = hs.json.decode(stdout)
-    local text = result and result.text
-    if text then
-      local language = (result.detected_language or "english"):lower()
-      text = text:gsub("\n", " "):gsub("\t", " "):match("^%s*(.-)%s*$")
-
-      cleanTranscription(text, language, outputMode, function(cleanedText, finalTimings)
-        appendToHistory(text, cleanedText, language, outputMode, finalTimings, config.whisper_model, config.ollama_model)
-        cleanupRecordingMarker()
-        hs.notify.new({
-          title = "Whisper",
-          informativeText = cleanedText,
-          withdrawAfter = 5
-        }):send()
-        setStatus("idle")
-      end, timings)
-    else
-      logError("Whisper JSON Decode", "Failed to parse response: " .. tostring(stdout))
-      cleanupRecordingMarker()
-      setStatus("error")
+    local customWords = loadCustomWords()
+    local curlArgs = {
+      "-s", "--max-time", "60", "-X", "POST", config.whisper_url,
+      "-F", "file=@" .. config.recording_file,
+      "-F", "response_format=verbose_json"
+    }
+    if #customWords > 0 then
+      table.insert(curlArgs, "-F")
+      table.insert(curlArgs, "prompt=" .. table.concat(customWords, ", "))
     end
-  end, curlArgs):start()
+
+    -- Build reproducible curl command for debugging
+    local whisperCurlCmd = "curl -s --max-time 60 -X POST " .. config.whisper_url
+      .. " -F 'file=@" .. config.recording_file .. "'"
+      .. " -F 'response_format=verbose_json'"
+    if #customWords > 0 then
+      whisperCurlCmd = whisperCurlCmd .. " -F 'prompt=" .. table.concat(customWords, ", ") .. "'"
+    end
+
+    local whisperStartTime = hs.timer.absoluteTime()
+    hs.task.new(config.curl, function(code, stdout, stderr)
+      if code ~= 0 then
+        logError("Whisper API Request", stderr .. "\nReproduce with:\n" .. whisperCurlCmd)
+        cleanupRecordingMarker()
+        setStatus("error")
+        return
+      end
+
+      local whisperEndTime = hs.timer.absoluteTime()
+      timings.whisper_transcription_ms = math.floor((whisperEndTime - whisperStartTime) / 1000000)
+
+      local result = hs.json.decode(stdout)
+      local text = result and result.text
+      if text then
+        local language = (result.detected_language or "english"):lower()
+        text = text:gsub("\n", " "):gsub("\t", " "):match("^%s*(.-)%s*$")
+
+        cleanTranscription(text, language, outputMode, function(cleanedText, finalTimings)
+          appendToHistory(text, cleanedText, language, outputMode, finalTimings, config.whisper_model, config.ollama_model)
+          cleanupRecordingMarker()
+          hs.notify.new({
+            title = "Whisper",
+            informativeText = cleanedText,
+            withdrawAfter = 5
+          }):send()
+          setStatus("idle")
+        end, timings)
+      else
+        logError("Whisper JSON Decode", "Failed to parse response: " .. tostring(stdout))
+        cleanupRecordingMarker()
+        setStatus("error")
+      end
+    end, curlArgs):start()
+  end)
+  recordingJob:terminate()
 end
 
 local function startRecording()

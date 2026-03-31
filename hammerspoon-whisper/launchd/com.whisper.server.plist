@@ -7,7 +7,14 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>__HOME__/.local/bin/whisper-server-start.sh</string>
+        <string>/opt/homebrew/bin/whisper-server</string>
+        <string>-m</string>
+        <string>__HOME__/.ai/models/ggml-large-v3-turbo-q8_0.bin</string>
+        <string>--port</string>
+        <string>49440</string>
+        <string>--vad</string>
+        <string>--vad-model</string>
+        <string>__HOME__/.ai/models/ggml-silero-v6.2.0.bin</string>
     </array>
 
     <key>RunAtLoad</key>

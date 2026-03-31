@@ -1,13 +1,12 @@
 HAMMERSPOON_DIR  := $(HOME)/.hammerspoon
 LAUNCH_AGENTS    := $(HOME)/Library/LaunchAgents
-LOCAL_BIN        := $(HOME)/.local/bin
 LOCAL_LOG        := $(HOME)/.local/var/log
 REPO             := $(shell pwd)
 UID              := $(shell id -u)
 
-.PHONY: install load unload reload dirs
+.PHONY: install load unload reload dirs cleanup-legacy
 
-install: dirs link-whisper install-launchd install-words
+install: dirs link-whisper install-launchd install-words cleanup-legacy
 	@echo ""
 	@echo "Installation complete."
 	@echo "  - whisper.lua is symlinked from the repo."
@@ -16,14 +15,11 @@ install: dirs link-whisper install-launchd install-words
 	@echo "  - Run 'make load' to start them immediately without logging out."
 
 dirs:
-	@mkdir -p $(LOCAL_BIN) $(LOCAL_LOG)
+	@mkdir -p $(LOCAL_LOG)
 
 link-whisper:
 	@ln -sf $(REPO)/whisper.lua $(HAMMERSPOON_DIR)/whisper.lua
 	@echo "Linked whisper.lua -> $(HAMMERSPOON_DIR)/whisper.lua"
-	@ln -sf $(REPO)/launchd/whisper-server-start.sh $(LOCAL_BIN)/whisper-server-start.sh
-	@chmod +x $(LOCAL_BIN)/whisper-server-start.sh
-	@echo "Linked whisper-server-start.sh -> $(LOCAL_BIN)/whisper-server-start.sh"
 
 install-launchd:
 	@sed "s|__HOME__|$(HOME)|g" $(REPO)/launchd/com.ollama.server.plist \
@@ -53,4 +49,9 @@ unload:
 	@launchctl bootout gui/$(UID) $(LAUNCH_AGENTS)/com.whisper.server.plist 2>/dev/null || true
 	@echo "Unloaded com.whisper.server"
 
-reload: unload load
+reload:
+	@launchctl kickstart -k gui/$(UID) $(LAUNCH_AGENTS)/com.whisper.server.plist 2>/dev/null || true
+	@launchctl kickstart -k gui/$(UID) $(LAUNCH_AGENTS)/com.ollama.server.plist 2>/dev/null || true
+
+cleanup-legacy:
+	@rm -f $(HOME)/.local/bin/whisper-server-start.sh
