@@ -89,6 +89,7 @@ local recordingContext = nil
 local whisperStatus    = "idle"
 local menuIcon         = nil
 local iconImages       = {}
+local ollamaAvailable  = false
 
 -- Animation state
 local statusTimer      = nil
@@ -133,9 +134,12 @@ local function updateMenu()
   }
 
   for _, modeKey in ipairs({"raw", "casual", "tech", "translate", "notes", "email", "message"}) do
+    local requiresOllama = (modeKey ~= "raw")
+    local isDisabled = requiresOllama and not ollamaAvailable
     table.insert(menu, {
-      title = config.modes[modeKey].title,
-      checked = (current_mode == modeKey),
+      title    = config.modes[modeKey].title .. (isDisabled and " (Ollama offline)" or ""),
+      checked  = (current_mode == modeKey),
+      disabled = isDisabled,
       fn = function()
         current_mode = modeKey
         updateMenu()
@@ -991,3 +995,13 @@ if menuIcon then menuIcon:delete() end
 menuIcon = hs.menubar.new()
 buildIcons()
 setStatus("idle")
+
+-- Check Ollama availability at startup; default to raw mode if offline
+hs.http.asyncGet(config.ollama_url:gsub("/api/generate", "/api/tags"), nil, function(status, _, _)
+  ollamaAvailable = (status == 200)
+  if not ollamaAvailable then
+    current_mode = "raw"
+    hs.notify.new({ title = "Whisper", informativeText = "Ollama is offline — only Raw mode available" }):send()
+  end
+  updateMenu()
+end)
